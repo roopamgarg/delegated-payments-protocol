@@ -28,8 +28,27 @@ jobs:
           test -f CONTRIBUTING.md
           test -f SECURITY.md
           test -f docs/protocol/research.md
+          test -f docs/protocol/agent-identity.md
+          test -f docs/protocol/payment-intents.md
+          test -f docs/integration-guides/upi.md
           test -f specs/schemas/capability-token.schema.json
+          test -f specs/schemas/payment-intent.schema.json
+          test -f specs/schemas/mandate.schema.json
+          test -f sdk/merchant-sdk/package.json
           echo "Required files present"
 
       - name: Validate JSON schemas
         run: bash scripts/validate-schemas.sh
+
+      - name: Typecheck merchant SDK
+        run: |
+          cd sdk/merchant-sdk
+          npm install
+          npm run typecheck
+
+      - name: Run Stripe reference snippet
+        run: |
+          cd sdk/merchant-sdk
+          npm run build
+          cd ../examples/stripe-delegated-payment
+          node checkout-flow.mjs

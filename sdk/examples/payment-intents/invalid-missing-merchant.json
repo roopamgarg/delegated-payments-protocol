@@ -1,0 +1,16 @@
+{
+  "dpp": "0.1",
+  "typ": "payment_intent",
+  "intentId": "pi_bad01",
+  "idempotencyKey": "idem_bad01",
+  "amount": {
+    "value": "10.00",
+    "currency": "USD"
+  },
+  "rail": "card",
+  "railClass": "B",
+  "digest": {
+    "alg": "sha-256",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}

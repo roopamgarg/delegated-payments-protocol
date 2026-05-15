@@ -17,5 +17,7 @@ The Delegated Payments Protocol (DPP) defines how users delegate bounded payment
 | Document | Status |
 |----------|--------|
 | [research.md](./research.md) | Draft — standards survey |
+| [agent-identity.md](./agent-identity.md) | Draft — cryptographic agent identity |
+| [payment-intents.md](./payment-intents.md) | Draft — payment intent + digest rules |
 | [verification-flows.md](./verification-flows.md) | Draft — OTP and escalation |
 | [ADR-001](../architecture/adr-001-capability-token-model.md) | Accepted (draft) — token model |

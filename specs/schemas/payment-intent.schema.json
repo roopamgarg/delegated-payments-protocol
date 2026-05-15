@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://delegated-payments-protocol.dev/schemas/v0.1/payment-intent.schema.json",
+  "title": "DPP PaymentIntent v0.1",
+  "description": "Canonical payment request object. Wallets and agents serialize deterministically, compute digest for capability intent.bind, and submit to payment rails.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dpp",
+    "typ",
+    "intentId",
+    "idempotencyKey",
+    "amount",
+    "merchantId",
+    "rail",
+    "railClass",
+    "digest"
+  ],
+  "properties": {
+    "dpp": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "typ": {
+      "type": "string",
+      "const": "payment_intent"
+    },
+    "intentId": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$",
+      "description": "Opaque wallet- or merchant-correlatable identifier."
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$",
+      "description": "Agent-supplied idempotency key for safe retries."
+    },
+    "amount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "currency"],
+      "properties": {
+        "value": {
+          "type": "string",
+          "pattern": "^[0-9]+(\\.[0-9]{1,8})?$"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        }
+      }
+    },
+    "merchantId": {
+      "type": "string",
+      "pattern": "^merchant:[a-z0-9][a-z0-9._-]*$"
+    },
+    "rail": {
+      "type": "string",
+      "enum": ["card", "upi", "wallet", "bank_transfer", "other"]
+    },
+    "railClass": {
+      "type": "string",
+      "enum": ["A", "B", "C", "D"],
+      "description": "Authentication class per verification-flows.md."
+    },
+    "mandateId": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$",
+      "description": "Required when railClass is C (mandate-gated) unless wallet policy embeds mandate elsewhere."
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 512
+      },
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9._-]{0,63}$"
+      },
+      "maxProperties": 32,
+      "description": "Non-sensitive rail hints (e.g., order id, MCC). MUST NOT contain secrets or OTP artifacts."
+    },
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["alg", "value"],
+      "description": "Cryptographic digest over the canonical payment intent (excluding this digest object) for intent.bind caveats.",
+      "properties": {
+        "alg": {
+          "type": "string",
+          "const": "sha-256"
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "railClass": { "const": "C" } },
+        "required": ["railClass"]
+      },
+      "then": {
+        "required": ["mandateId"]
+      }
+    }
+  ]
+}

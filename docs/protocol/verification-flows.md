@@ -334,7 +334,7 @@ User-only (agent forbidden):
 1. Hardware-bound `userPresentProof` for lowering escalation friction on supported devices
 2. Cross-device escalation (agent on desktop, OTP on phone) — deep-link standardization
 3. Federated wallet issuers and mandate portability
-4. JSON Schema for `PaymentIntent`, `Escalation`, and `Mandate` objects (tracked under schema work)
+4. JSON Schemas for `PaymentIntent`, `Escalation`, and `Mandate` objects — `PaymentIntent` and `Mandate` shipped in v0.1 (`specs/schemas/`); `Escalation` handle remains documented in this file until formalized
 
 ---
 
