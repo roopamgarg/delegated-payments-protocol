@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for secrets
+        run: |
+          if grep -rE '(AKIA[0-9A-Z]{16}|sk_live_|sk_test_|-----BEGIN (RSA |EC )?PRIVATE KEY-----)' . \
+            --exclude-dir=.git 2>/dev/null; then
+            echo "::error::Potential secret detected in repository"
+            exit 1
+          fi
+          echo "No obvious secrets found"
+
+      - name: Verify repository structure
+        run: |
+          test -f README.md
+          test -f LICENSE
+          test -f CONTRIBUTING.md
+          test -f SECURITY.md
+          test -f docs/protocol/research.md
+          echo "Required files present"
