@@ -230,7 +230,7 @@ User ──grants──▶ Capability Token ──presented──▶ Merchant / 
 | Draft capability token schema | Protocol Engineer | TBD |
 | Threat model: token theft, scope escalation | Security Researcher | TBD |
 | Architecture decision record: token format | CTO | TBD |
-| OTP escalation flow spec | Protocol Engineer | TBD |
+| OTP escalation flow spec | CTO | [verification-flows.md](./verification-flows.md) (AGE-4) |
 
 ---
 
