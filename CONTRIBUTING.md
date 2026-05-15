@@ -10,7 +10,12 @@ Thank you for helping build the Delegated Payments Protocol. This project is ope
    ```
 2. **Make changes** — Keep commits focused. Follow existing structure and naming.
 3. **Open a PR** — Target `main`. Fill out the PR template. Link related issues.
-4. **Review** — At least one maintainer review is required before merge.
+4. **Review** — At least one maintainer review is required before merge (enforced by branch protection on `main`).
+5. **Merge** — **Human maintainers only**, using the GitHub **web UI** (Merge / Squash / Rebase button). Automation, bots, and agent sessions must **not** merge pull requests (no `gh pr merge`, no API merge from agent credentials).
+
+### Why human UI merges
+
+GitHub does not expose a “UI-only” merge flag. Policy is: agents and automation open PRs and leave them for a maintainer to merge in the browser. Prefer **fine-grained personal access tokens** for automation with **Contents: Read** and **Pull requests: Read/Write** as needed, but **without** merge ability where possible; never store maintainer merge tokens in agent environments.
 
 ## Branch Naming
 
