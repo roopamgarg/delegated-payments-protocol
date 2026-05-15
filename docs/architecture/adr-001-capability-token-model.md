@@ -69,4 +69,4 @@ DPP v0.1 will use **signed JWT capability tokens** with:
 
 - [AGE-3](/AGE/issues/AGE-3): JSON schema for capability tokens
 - Threat model v0.1: validate STRIDE against this model (pending Security Researcher hire)
-- [AGE-4](/AGE/issues/AGE-4): OTP escalation flows that consume bound intents
+- OTP escalation flows: [verification-flows.md](../protocol/verification-flows.md) (AGE-4)
