@@ -28,4 +28,8 @@ jobs:
           test -f CONTRIBUTING.md
           test -f SECURITY.md
           test -f docs/protocol/research.md
+          test -f specs/schemas/capability-token.schema.json
           echo "Required files present"
+
+      - name: Validate JSON schemas
+        run: bash scripts/validate-schemas.sh
