@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://delegated-payments-protocol.dev/schemas/v0.1/capability-token.schema.json",
+  "title": "DPP Capability Token v0.1",
+  "description": "Canonical payload for a Delegated Payments Protocol capability token. Tokens are typically carried as signed JWTs; this schema defines the JSON claims set verifiers and issuers MUST implement. Inspired by UCAN attenuation, Macaroon caveats, and OAuth-style scopes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dpp",
+    "typ",
+    "iss",
+    "sub",
+    "exp",
+    "nonce",
+    "scopes",
+    "constraints"
+  ],
+  "properties": {
+    "dpp": {
+      "type": "string",
+      "const": "0.1",
+      "description": "DPP protocol version."
+    },
+    "typ": {
+      "type": "string",
+      "const": "capability",
+      "description": "Discriminator for capability tokens vs other DPP artifacts."
+    },
+    "iss": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Issuer of this token: user DID, delegator DID, or DPP authorization server URI."
+    },
+    "sub": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Subject (holder) that may exercise capabilities—typically an agent identity (did:key, SPIFFE ID, or stable agent URI)."
+    },
+    "aud": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Optional intended audiences (merchants, payment rails, or verification endpoints)."
+    },
+    "exp": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Expiration time as Unix seconds. Verifiers MUST reject tokens where exp is in the past. Use short TTLs by default."
+    },
+    "nbf": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Not-before time as Unix seconds. Verifiers MUST reject tokens presented before nbf."
+    },
+    "nonce": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$",
+      "description": "Unique, single-use identifier for replay protection. Verifiers MUST track seen nonces (or bind to payment intent) within the token TTL window."
+    },
+    "scopes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9]*(:[a-z0-9][a-z0-9._-]*)*$",
+        "description": "OAuth-inspired capability scopes (e.g. pay:initiate, pay:merchant:example.com)."
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxAmount", "merchantAllowlist"],
+      "description": "Macaroon-inspired payment caveats. Delegation MUST only narrow constraints, never expand them.",
+      "properties": {
+        "maxAmount": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["value", "currency"],
+          "description": "Upper bound on a single payment or intent amount in minor units or decimal string per currency rules.",
+          "properties": {
+            "value": {
+              "type": "string",
+              "pattern": "^[0-9]+(\\.[0-9]{1,8})?$",
+              "description": "Maximum amount as a decimal string (no scientific notation) to avoid floating-point errors."
+            },
+            "currency": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$",
+              "description": "ISO 4217 currency code."
+            }
+          }
+        },
+        "merchantAllowlist": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^merchant:[a-z0-9][a-z0-9._-]*$",
+            "description": "Merchant identifiers the holder may pay. Empty allowlists are forbidden at issuance."
+          },
+          "description": "Merchants this token may target. Verifiers MUST reject payments to merchants not in this list."
+        },
+        "paymentMethods": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["card", "upi", "wallet", "bank_transfer"]
+          },
+          "description": "Optional restriction on payment rails."
+        },
+        "requiresOtp": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, payment rails MUST require human OTP or step-up before settlement; agents MUST NOT bypass."
+        }
+      }
+    },
+    "delegation": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "UCAN-inspired delegation metadata. Present when this token is derived from a parent grant.",
+      "properties": {
+        "parentJti": {
+          "type": "string",
+          "minLength": 8,
+          "description": "Nonce/jti of the parent capability token in the attenuation chain."
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8,
+          "description": "Delegation depth from the original user grant (0 = direct user issuance)."
+        },
+        "mayDelegate": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the holder may issue further attenuated child tokens."
+        }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Cryptographic proof of integrity. In JWT profiles, this may be omitted when carried as a JWS envelope.",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["jws", "JsonWebSignature2020"]
+        },
+        "jws": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Compact JWS over the canonical JSON payload when not using an outer JWT."
+        }
+      }
+    }
+  }
+}

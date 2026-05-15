@@ -1,0 +1,15 @@
+{
+  "dpp": "0.1",
+  "typ": "capability",
+  "iss": "did:key:z6MkuserExampleGrantor",
+  "sub": "did:key:z6MkagentExampleHolder",
+  "nonce": "missing-exp-nonce-001",
+  "scopes": ["pay:initiate"],
+  "constraints": {
+    "maxAmount": {
+      "value": "50.00",
+      "currency": "USD"
+    },
+    "merchantAllowlist": ["merchant:checkout.example"]
+  }
+}
