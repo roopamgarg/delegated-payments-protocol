@@ -10,6 +10,13 @@ import {
   FORBIDDEN_CLAIMS,
   JWS,
 } from '../constants.js';
+import {
+  assertNotReplayed,
+  getDefaultNonceStore,
+  ReplayError,
+  type NonceStore,
+} from './nonce-store.js';
+import { validateCapabilitySchema } from './schema-validator.js';
 
 export type JwsTrustConfig = {
   /** JWKS document URL for the wallet issuer. */
@@ -28,6 +35,19 @@ export type JwsTrustConfig = {
    */
   readonly allowInsecureTrustConfig?: boolean;
   readonly clockSkewSeconds?: number;
+  /**
+   * Replay store for `nonce` / `jti`. When omitted, `InMemoryNonceStore` is used
+   * (dev, tests, single-node). Horizontally scaled production MUST set a shared store.
+   */
+  readonly nonceStore?: NonceStore;
+};
+
+export type VerifyCapabilityOptions = {
+  /**
+   * When set, nonce consumption is scoped to this payment idempotency key
+   * (per wallet contract). Retries with the same key do not count as replay.
+   */
+  readonly idempotencyKey?: string;
 };
 
 function assertCapabilityPayload(payload: jose.JWTPayload): CapabilityTokenPayload {
@@ -60,6 +80,7 @@ async function resolveJwks(config: JwsTrustConfig): Promise<JwksVerifier> {
 export async function verifyCapabilityJws(
   compactJwt: string,
   trust: JwsTrustConfig,
+  options?: VerifyCapabilityOptions,
 ): Promise<CapabilityTokenPayload> {
   const jwks = await resolveJwks(trust);
   const skew = trust.clockSkewSeconds ?? DEFAULT_CLOCK_SKEW_SECONDS;
@@ -78,7 +99,10 @@ export async function verifyCapabilityJws(
     );
   }
 
+  const record = payload as Record<string, unknown>;
   const capability = assertCapabilityPayload(payload);
+
+  validateCapabilitySchema(record);
 
   if (
     trust.issuerAllowlist?.length &&
@@ -87,6 +111,25 @@ export async function verifyCapabilityJws(
     throw new DPPError(DPP_ERROR_CODE.UNTRUSTED_ISSUER, `Issuer not allowlisted: ${capability.iss}`, {
       iss: capability.iss,
     });
+  }
+
+  const store = trust.nonceStore ?? getDefaultNonceStore();
+  const jti = typeof record.jti === 'string' ? record.jti : undefined;
+  try {
+    await assertNotReplayed(store, {
+      nonce: capability.nonce,
+      exp: capability.exp,
+      jti,
+      idempotencyKey: options?.idempotencyKey,
+    });
+  } catch (err) {
+    if (err instanceof ReplayError) {
+      throw new DPPError(DPP_ERROR_CODE.TOKEN_REPLAY, err.message, { replayKey: err.replayKey });
+    }
+    throw new DPPError(
+      DPP_ERROR_CODE.INVALID_TOKEN,
+      err instanceof Error ? err.message : 'Replay check failed',
+    );
   }
 
   return capability;

@@ -38,7 +38,14 @@ export {
   signCapabilityForTest,
   generateTestKeyPair,
   type JwsTrustConfig,
+  type VerifyCapabilityOptions,
 } from './crypto/jws.js';
+
+export {
+  InMemoryNonceStore,
+  getDefaultNonceStore,
+  type NonceStore,
+} from './crypto/nonce-store.js';
 
 export type {
   CreatePaymentParams,

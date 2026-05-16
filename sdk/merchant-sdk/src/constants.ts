@@ -66,6 +66,7 @@ export const DPP_ERROR_CLASS_NAME = 'DPPError' as const;
 
 export const DPP_ERROR_CODE = {
   INVALID_TOKEN: 'invalid_token',
+  TOKEN_REPLAY: 'token_replay',
   INVALID_SIGNATURE: 'invalid_signature',
   UNTRUSTED_ISSUER: 'untrusted_issuer',
   DELEGATION_INVALID: 'delegation_invalid',
