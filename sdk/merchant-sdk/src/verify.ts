@@ -1,23 +1,12 @@
 import type { CapabilityTokenPayload, PaymentIntentPayload, VerifyDelegationResult } from './types.js';
-
-/**
- * Compare two non-negative decimal strings without floating point.
- * v0.1 limitation: assumes no exponential notation; production code should use a decimal library.
- */
-function decimalStringLte(value: string, max: string): boolean {
-  const norm = (s: string): string[] => {
-    const [whole, frac = ''] = s.split('.');
-    const w = whole.replace(/^0+/, '') || '0';
-    return [w, frac.replace(/0+$/, '')];
-  };
-  const [vw, vf] = norm(value);
-  const [mw, mf] = norm(max);
-  if (vw.length !== mw.length) return vw.length < mw.length;
-  if (vw !== mw) return vw < mw;
-  const a = vf.padEnd(8, '0');
-  const b = mf.padEnd(8, '0');
-  return a <= b;
-}
+import { amountLte } from './core/decimal.js';
+import {
+  ARTIFACT_TYPE,
+  DELEGATION_VERDICT,
+  DEFAULT_CLOCK_SKEW_SECONDS,
+  DPP_VERSION,
+  VERIFICATION_REASON,
+} from './constants.js';
 
 function nowUnix(): number {
   return Math.floor(Date.now() / 1000);
@@ -33,46 +22,52 @@ export function verifyDelegation(input: {
   readonly clockSkewSeconds?: number;
 }): VerifyDelegationResult {
   const reasons: string[] = [];
-  const skew = input.clockSkewSeconds ?? 60;
+  const skew = input.clockSkewSeconds ?? DEFAULT_CLOCK_SKEW_SECONDS;
   const cap = input.capability;
   const pi = input.paymentIntent;
 
-  if (cap.dpp !== '0.1' || cap.typ !== 'capability') {
-    reasons.push('capability:unsupported_type');
+  if (cap.dpp !== DPP_VERSION || cap.typ !== ARTIFACT_TYPE.CAPABILITY) {
+    reasons.push(VERIFICATION_REASON.CAPABILITY_UNSUPPORTED_TYPE);
   }
-  if (pi.dpp !== '0.1' || pi.typ !== 'payment_intent') {
-    reasons.push('intent:unsupported_type');
+  if (pi.dpp !== DPP_VERSION || pi.typ !== ARTIFACT_TYPE.PAYMENT_INTENT) {
+    reasons.push(VERIFICATION_REASON.INTENT_UNSUPPORTED_TYPE);
   }
 
   const exp = cap.exp;
   if (typeof exp !== 'number' || exp < nowUnix() - skew) {
-    reasons.push('capability:expired');
+    reasons.push(VERIFICATION_REASON.CAPABILITY_EXPIRED);
   }
   if (cap.nbf !== undefined && cap.nbf > nowUnix() + skew) {
-    reasons.push('capability:not_yet_valid');
+    reasons.push(VERIFICATION_REASON.CAPABILITY_NOT_YET_VALID);
   }
 
   if (!cap.constraints.merchantAllowlist.includes(pi.merchantId)) {
-    reasons.push('intent:merchant_not_allowlisted');
+    reasons.push(VERIFICATION_REASON.INTENT_MERCHANT_NOT_ALLOWLISTED);
   }
 
   if (pi.amount.currency !== cap.constraints.maxAmount.currency) {
-    reasons.push('intent:currency_mismatch');
-  } else if (!decimalStringLte(pi.amount.value, cap.constraints.maxAmount.value)) {
-    reasons.push('intent:amount_exceeds_max');
+    reasons.push(VERIFICATION_REASON.INTENT_CURRENCY_MISMATCH);
+  } else {
+    try {
+      if (!amountLte(pi.amount.value, cap.constraints.maxAmount.value)) {
+        reasons.push(VERIFICATION_REASON.INTENT_AMOUNT_EXCEEDS_MAX);
+      }
+    } catch {
+      reasons.push(VERIFICATION_REASON.INTENT_INVALID_AMOUNT);
+    }
   }
 
   const methods = cap.constraints.paymentMethods;
   if (methods?.length && !methods.includes(pi.rail)) {
-    reasons.push('intent:rail_not_permitted');
+    reasons.push(VERIFICATION_REASON.INTENT_RAIL_NOT_PERMITTED);
   }
 
   if (cap.intentBind !== undefined && cap.intentBind !== pi.digest.value) {
-    reasons.push('intent:digest_mismatch');
+    reasons.push(VERIFICATION_REASON.INTENT_DIGEST_MISMATCH);
   }
 
   if (reasons.length === 0) {
-    return { verdict: 'delegation_valid', reasons: [] };
+    return { verdict: DELEGATION_VERDICT.VALID, reasons: [] };
   }
-  return { verdict: 'delegation_invalid', reasons };
+  return { verdict: DELEGATION_VERDICT.INVALID, reasons };
 }

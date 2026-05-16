@@ -1,24 +1,65 @@
 {
-  "name": "dpp-merchant-sdk",
-  "version": "0.1.0",
-  "private": true,
-  "description": "TypeScript contract for verifying DPP capability tokens against payment intents (merchant side).",
+  "name": "@dpp/merchant-sdk",
+  "version": "0.2.0-alpha.0",
+  "description": "Production merchant SDK for Delegated Payments Protocol — JWS verification, PSP adapters, and escalation handling.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "files": [
     "dist",
-    "src"
+    "README.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test tests/*.test.js",
+    "prepublishOnly": "npm run test"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "engines": {
     "node": ">=20"
   },
+  "dependencies": {
+    "decimal.js": "^10.5.0",
+    "jose": "^6.0.11"
+  },
+  "peerDependencies": {
+    "razorpay": "^2.9.0",
+    "stripe": "^17.0.0"
+  },
+  "peerDependenciesMeta": {
+    "razorpay": {
+      "optional": true
+    },
+    "stripe": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@types/node": "^22.15.21",
+    "razorpay": "^2.9.6",
+    "stripe": "^17.7.0",
     "typescript": "^5.4.5"
+  },
+  "keywords": [
+    "dpp",
+    "delegated-payments",
+    "merchant",
+    "payments"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roopamgarg/delegated-payments-protocol.git",
+    "directory": "sdk/merchant-sdk"
   }
 }
