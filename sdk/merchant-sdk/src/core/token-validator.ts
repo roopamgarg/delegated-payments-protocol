@@ -20,7 +20,9 @@ export type ValidateDelegationResult = VerifyDelegationResult & {
 export async function validateDelegation(
   input: ValidateDelegationInput,
 ): Promise<ValidateDelegationResult> {
-  const capability = await verifyCapabilityJws(input.capabilityToken, input.trust);
+  const capability = await verifyCapabilityJws(input.capabilityToken, input.trust, {
+    idempotencyKey: input.paymentIntent.idempotencyKey,
+  });
   const result = verifyDelegation({
     capability,
     paymentIntent: input.paymentIntent,

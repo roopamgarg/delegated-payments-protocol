@@ -2,6 +2,13 @@ import * as jose from 'jose';
 import type { JSONWebKeySet } from 'jose';
 import type { CapabilityTokenPayload } from '../types.js';
 import { DPPError } from '../errors.js';
+import {
+  assertNotReplayed,
+  getDefaultNonceStore,
+  ReplayError,
+  type NonceStore,
+} from './nonce-store.js';
+import { validateCapabilitySchema } from './schema-validator.js';
 
 /** Claims that MUST be rejected per verification-flows.md §6. */
 const FORBIDDEN_CLAIMS = [
@@ -19,14 +26,21 @@ export type JwsTrustConfig = {
   readonly issuerAllowlist?: ReadonlyArray<string>;
   /** Expected JWT audiences; when set, `aud` must intersect. */
   readonly audience?: ReadonlyArray<string>;
-  /** Capability scopes required for payment (default: `pay:initiate`). */
-  readonly requiredScopes?: ReadonlyArray<string>;
-  /**
-   * When true, `createMerchant` does not require issuerAllowlist/audience.
-   * Use only in local tests and examples — never in production deployments.
-   */
-  readonly allowInsecureTrustConfig?: boolean;
   readonly clockSkewSeconds?: number;
+  /** Replay store for `nonce` / `jti`; defaults to in-memory (single-node only). */
+  readonly nonceStore?: NonceStore;
+  /** Scopes required on capability tokens (default: `pay:initiate`). */
+  readonly requiredScopes?: ReadonlyArray<string>;
+  /** Skip production issuer/audience checks (local dev and tests only). */
+  readonly allowInsecureTrustConfig?: boolean;
+};
+
+export type VerifyCapabilityOptions = {
+  /**
+   * When set, nonce consumption is scoped to this payment idempotency key
+   * (per wallet contract). Retries with the same key do not count as replay.
+   */
+  readonly idempotencyKey?: string;
 };
 
 function assertCapabilityPayload(payload: jose.JWTPayload): CapabilityTokenPayload {
@@ -57,6 +71,7 @@ async function resolveJwks(config: JwsTrustConfig): Promise<JwksVerifier> {
 export async function verifyCapabilityJws(
   compactJwt: string,
   trust: JwsTrustConfig,
+  options?: VerifyCapabilityOptions,
 ): Promise<CapabilityTokenPayload> {
   const jwks = await resolveJwks(trust);
   const skew = trust.clockSkewSeconds ?? 60;
@@ -75,7 +90,10 @@ export async function verifyCapabilityJws(
     );
   }
 
+  const record = payload as Record<string, unknown>;
   const capability = assertCapabilityPayload(payload);
+
+  validateCapabilitySchema(record);
 
   if (
     trust.issuerAllowlist?.length &&
@@ -84,6 +102,25 @@ export async function verifyCapabilityJws(
     throw new DPPError('untrusted_issuer', `Issuer not allowlisted: ${capability.iss}`, {
       iss: capability.iss,
     });
+  }
+
+  const store = trust.nonceStore ?? getDefaultNonceStore();
+  const jti = typeof record.jti === 'string' ? record.jti : undefined;
+  try {
+    await assertNotReplayed(store, {
+      nonce: capability.nonce,
+      exp: capability.exp,
+      jti,
+      idempotencyKey: options?.idempotencyKey,
+    });
+  } catch (err) {
+    if (err instanceof ReplayError) {
+      throw new DPPError('token_replay', err.message, { replayKey: err.replayKey });
+    }
+    throw new DPPError(
+      'invalid_token',
+      err instanceof Error ? err.message : 'Replay check failed',
+    );
   }
 
   return capability;

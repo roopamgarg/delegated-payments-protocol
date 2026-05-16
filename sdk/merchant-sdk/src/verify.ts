@@ -24,9 +24,6 @@ export function verifyDelegation(input: {
   if (cap.dpp !== '0.1' || cap.typ !== 'capability') {
     reasons.push('capability:unsupported_type');
   }
-  if (!cap.scopes?.includes('pay:initiate')) {
-    reasons.push('capability:missing_scope');
-  }
 
   const requiredScopes = resolveRequiredScopes({
     requiredScopes: input.requiredScopes,

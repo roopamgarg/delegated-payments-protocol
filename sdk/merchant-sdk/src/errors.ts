@@ -1,5 +1,6 @@
 export type DPPErrorCode =
   | 'invalid_token'
+  | 'token_replay'
   | 'invalid_signature'
   | 'untrusted_issuer'
   | 'delegation_invalid'

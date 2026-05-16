@@ -14,6 +14,7 @@
   },
   "files": [
     "dist",
+    "schemas",
     "README.md"
   ],
   "scripts": {
@@ -25,6 +26,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "ajv": "^8.20.0",
     "decimal.js": "^10.5.0",
     "jose": "^6.0.11"
   },

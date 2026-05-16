@@ -48,13 +48,16 @@ if (result.status === 'pending_user_action') {
 | `DPPMerchant` / `createMerchant` | End-to-end verify + charge |
 | `validateDelegation` | JWS + offline caveat checks |
 | `verifyDelegation` | Offline checks only (parsed payloads) |
-| `verifyCapabilityJws` | Signature + forbidden-claim gate |
+| `verifyCapabilityJws` | Signature, schema validation, nonce/`jti` replay gate |
+| `InMemoryNonceStore` / `NonceStore` | Pluggable replay protection (use Redis in prod) |
 | `StripeAdapter` / `RazorpayAdapter` | PSP integrations |
 | `transition`, `canTransition` | Escalation state machine helpers |
 
 ## Security
 
 - Built-in rejection of forbidden claims (`dpp:otpBypass`, etc.).
+- AJV validation against the normative capability token schema after JWS verify.
+- Default in-memory `nonce` / `jti` replay store; inject a distributed `nonceStore` for production.
 - Configure `issuerAllowlist` and JWKS pinning in production.
 - Merchants verify delegation **before** rail handoff; OTP/3DS completion stays on the user channel.
 - Set `DPP_AUDIT_LOG=1` for structured audit lines.
