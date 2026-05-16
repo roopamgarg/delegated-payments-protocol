@@ -1,5 +1,18 @@
 import type { CreatePaymentParams, PSPAdapter, PSPPaymentResult, WebhookEvent } from './types.js';
 import { DPPError } from '../errors.js';
+import {
+  DPP_ERROR_CODE,
+  ESCALATION_ID_PREFIX,
+  ESCALATION_TTL_MS,
+  INTENT_STATE,
+  METADATA_KEY,
+  PSP_NAME,
+  RAZORPAY_ORDER_STATUS,
+  REQUIRED_ACTION,
+  RESUME_HINT,
+  USER_CHANNEL,
+  WEBHOOK,
+} from '../constants.js';
 
 export type RazorpayAdapterConfig = {
   readonly keyId: string;
@@ -25,10 +38,10 @@ function minorUnits(value: string): number {
 }
 
 function mapOrderStatus(order: RazorpayOrder): PSPPaymentResult['status'] {
-  if (order.status === 'paid') return 'succeeded';
-  if (order.status === 'attempted') return 'pending_user_action';
-  if (order.status === 'created') return 'executing';
-  return 'failed';
+  if (order.status === RAZORPAY_ORDER_STATUS.PAID) return INTENT_STATE.SUCCEEDED;
+  if (order.status === RAZORPAY_ORDER_STATUS.ATTEMPTED) return INTENT_STATE.PENDING_USER_ACTION;
+  if (order.status === RAZORPAY_ORDER_STATUS.CREATED) return INTENT_STATE.EXECUTING;
+  return INTENT_STATE.FAILED;
 }
 
 function toResult(order: RazorpayOrder): PSPPaymentResult {
@@ -39,18 +52,18 @@ function toResult(order: RazorpayOrder): PSPPaymentResult {
     raw: order,
   };
 
-  if (status === 'pending_user_action') {
-    const intentId = order.notes?.dppIntentId ?? order.id;
+  if (status === INTENT_STATE.PENDING_USER_ACTION) {
+    const intentId = order.notes?.[METADATA_KEY.DPP_INTENT_ID] ?? order.id;
     return {
       ...base,
       escalation: {
-        escalationId: `esc_razorpay_${order.id}`,
+        escalationId: `${ESCALATION_ID_PREFIX.RAZORPAY}${order.id}`,
         intentId,
-        status: 'pending_user_action',
-        requiredAction: 'otp',
-        userChannel: 'wallet_app',
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
-        resumeHint: 'poll_intent',
+        status: INTENT_STATE.PENDING_USER_ACTION,
+        requiredAction: REQUIRED_ACTION.OTP,
+        userChannel: USER_CHANNEL.WALLET_APP,
+        expiresAt: new Date(Date.now() + ESCALATION_TTL_MS).toISOString(),
+        resumeHint: RESUME_HINT.POLL_INTENT,
       },
     };
   }
@@ -76,14 +89,14 @@ async function loadRazorpay(config: RazorpayAdapterConfig): Promise<RazorpayClie
     }) as unknown as RazorpayClient;
   } catch {
     throw new DPPError(
-      'psp_not_configured',
+      DPP_ERROR_CODE.PSP_NOT_CONFIGURED,
       'Install the optional peer dependency `razorpay` to use RazorpayAdapter',
     );
   }
 }
 
 export class RazorpayAdapter implements PSPAdapter {
-  readonly name = 'razorpay';
+  readonly name = PSP_NAME.RAZORPAY;
   private readonly client: Promise<RazorpayClient>;
   private readonly webhookSecret?: string;
 
@@ -101,9 +114,9 @@ export class RazorpayAdapter implements PSPAdapter {
       currency: pi.amount.currency,
       receipt: pi.idempotencyKey,
       notes: {
-        dppIntentId: pi.intentId,
-        dppMerchantId: pi.merchantId,
-        ...(pi.mandateId ? { dppMandateId: pi.mandateId } : {}),
+        [METADATA_KEY.DPP_INTENT_ID]: pi.intentId,
+        [METADATA_KEY.DPP_MERCHANT_ID]: pi.merchantId,
+        ...(pi.mandateId ? { [METADATA_KEY.DPP_MANDATE_ID]: pi.mandateId } : {}),
         ...params.metadata,
       },
     })) as RazorpayOrder;
@@ -122,12 +135,12 @@ export class RazorpayAdapter implements PSPAdapter {
   }
 
   async cancelPayment(_pspPaymentId: string): Promise<void> {
-    throw new DPPError('psp_error', 'Razorpay order cancellation is not supported in v0.2 alpha');
+    throw new DPPError(DPP_ERROR_CODE.PSP_ERROR, 'Razorpay order cancellation is not supported in v0.2 alpha');
   }
 
   async parseWebhook(payload: Buffer, signature: string): Promise<WebhookEvent> {
     if (!this.webhookSecret) {
-      throw new DPPError('psp_error', 'Razorpay webhookSecret is required to parse webhooks');
+      throw new DPPError(DPP_ERROR_CODE.PSP_ERROR, 'Razorpay webhookSecret is required to parse webhooks');
     }
 
     const crypto = await import('node:crypto');
@@ -137,7 +150,7 @@ export class RazorpayAdapter implements PSPAdapter {
       .digest('hex');
 
     if (expected !== signature) {
-      throw new DPPError('psp_error', 'Invalid Razorpay webhook signature');
+      throw new DPPError(DPP_ERROR_CODE.PSP_ERROR, 'Invalid Razorpay webhook signature');
     }
 
     const body = JSON.parse(payload.toString('utf8')) as {
@@ -147,7 +160,7 @@ export class RazorpayAdapter implements PSPAdapter {
 
     const order = body.payload?.order?.entity;
     if (!order) {
-      return { type: body.event, pspPaymentId: 'unknown', status: 'executing' };
+      return { type: body.event, pspPaymentId: WEBHOOK.UNKNOWN_PSP_PAYMENT_ID, status: INTENT_STATE.EXECUTING };
     }
 
     const mapped = toResult(order);
@@ -155,7 +168,7 @@ export class RazorpayAdapter implements PSPAdapter {
       type: body.event,
       pspPaymentId: order.id,
       status: mapped.status,
-      intentId: order.notes?.dppIntentId,
+      intentId: order.notes?.[METADATA_KEY.DPP_INTENT_ID],
     };
   }
 }

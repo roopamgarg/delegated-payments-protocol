@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DPPError } from '../errors.js';
+import { DPP_ERROR_CODE } from '../constants.js';
 
 const require = createRequire(import.meta.url);
 const Ajv2020 = require('ajv/dist/2020') as new (opts?: {
@@ -31,7 +32,7 @@ function loadCapabilitySchema(): object {
       // try next
     }
   }
-  throw new DPPError('invalid_token', 'Capability token JSON Schema is unavailable');
+  throw new DPPError(DPP_ERROR_CODE.INVALID_TOKEN, 'Capability token JSON Schema is unavailable');
 }
 
 function getValidator(): ValidateFunction {
@@ -74,7 +75,7 @@ export function validateCapabilitySchema(payload: Record<string, unknown>): void
       throw err;
     }
     throw new DPPError(
-      'invalid_token',
+      DPP_ERROR_CODE.INVALID_TOKEN,
       err instanceof Error ? err.message : 'Schema validator initialization failed',
     );
   }
@@ -83,7 +84,7 @@ export function validateCapabilitySchema(payload: Record<string, unknown>): void
     if (validate(forSchema)) {
       return;
     }
-    throw new DPPError('invalid_token', formatSchemaErrors(validate.errors), {
+    throw new DPPError(DPP_ERROR_CODE.INVALID_TOKEN, formatSchemaErrors(validate.errors), {
       schemaErrors: validate.errors ?? [],
     });
   } catch (err) {
@@ -91,7 +92,7 @@ export function validateCapabilitySchema(payload: Record<string, unknown>): void
       throw err;
     }
     throw new DPPError(
-      'invalid_token',
+      DPP_ERROR_CODE.INVALID_TOKEN,
       err instanceof Error ? err.message : 'Capability token schema validation failed',
     );
   }

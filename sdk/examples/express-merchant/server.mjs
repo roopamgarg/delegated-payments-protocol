@@ -33,7 +33,7 @@ async function bootstrap() {
       allowInsecureTrustConfig: true,
     },
     credentials: {
-      secretKey: process.env.STRIPE_SECRET_KEY ?? 'sk_test_demo_only',
+      secretKey: process.env.STRIPE_SECRET_KEY ?? 'demo-stripe-secret-not-a-real-key',
       webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
       stripe,
     },

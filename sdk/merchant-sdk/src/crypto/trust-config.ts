@@ -1,7 +1,8 @@
 import type { JwsTrustConfig } from './jws.js';
 import { DPPError } from '../errors.js';
+import { DPP_ERROR_CODE, REQUIRED_CAPABILITY_SCOPE } from '../constants.js';
 
-const DEFAULT_REQUIRED_SCOPES = ['pay:initiate'] as const;
+const DEFAULT_REQUIRED_SCOPES = [REQUIRED_CAPABILITY_SCOPE.PAY_INITIATE] as const;
 
 function isNonEmptyStringArray(value?: ReadonlyArray<string>): boolean {
   return (
@@ -29,7 +30,7 @@ export function assertProductionTrustConfig(trust: JwsTrustConfig): void {
 
   if (!isNonEmptyStringArray(trust.issuerAllowlist)) {
     throw new DPPError(
-      'invalid_token',
+      DPP_ERROR_CODE.INVALID_TOKEN,
       'Production trust config requires a non-empty issuerAllowlist (or allowInsecureTrustConfig for local dev)',
       { field: 'issuerAllowlist' },
     );
@@ -37,7 +38,7 @@ export function assertProductionTrustConfig(trust: JwsTrustConfig): void {
 
   if (!isNonEmptyStringArray(trust.audience)) {
     throw new DPPError(
-      'invalid_token',
+      DPP_ERROR_CODE.INVALID_TOKEN,
       'Production trust config requires a non-empty audience (or allowInsecureTrustConfig for local dev)',
       { field: 'audience' },
     );

@@ -20,13 +20,18 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && node --test tests/*.test.js"
+    "test": "npm run build && node --test tests/*.test.js",
+    "prepublishOnly": "npm run test"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
-    "ajv": "^8.20.0",
+    "ajv": "^8.17.1",
     "decimal.js": "^10.5.0",
     "jose": "^6.0.11"
   },
