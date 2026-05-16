@@ -1,5 +1,5 @@
 {
-  "name": "@dpp/merchant-sdk",
+  "name": "dpp-merchant-sdk",
   "version": "0.2.0-alpha.0",
   "description": "Production merchant SDK for Delegated Payments Protocol — JWS verification, PSP adapters, and escalation handling.",
   "license": "Apache-2.0",

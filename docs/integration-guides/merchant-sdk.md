@@ -3,7 +3,7 @@
 **Status:** Draft (informative)  
 **Last updated:** 2026-05-16  
 **Audience:** Merchant backend engineers integrating delegated agent checkout  
-**Package:** [`@dpp/merchant-sdk`](../../sdk/merchant-sdk/)  
+**Package:** [`dpp-merchant-sdk`](https://www.npmjs.com/package/dpp-merchant-sdk) ([source](../../sdk/merchant-sdk/))  
 **Related:** [verification-flows.md](../protocol/verification-flows.md), [payment-intents.md](../protocol/payment-intents.md), [Express example](../../sdk/examples/express-merchant/)
 
 This guide walks through wiring the **merchant SDK** into your payment server: trust configuration, delegation verification, PSP handoff, escalation handling, and webhooks.
@@ -32,7 +32,7 @@ Agents and wallets construct capability tokens and intents; merchants **never** 
 | Wallet JWKS | HTTPS `jwksUri` or pinned inline `jwks` |
 | PSP credentials | Stripe secret key and optional webhook secret, or Razorpay keys |
 
-> **Alpha:** `@dpp/merchant-sdk` is consumed from this monorepo until npm publish. Use `"@dpp/merchant-sdk": "file:../../merchant-sdk"` in examples.
+> **npm:** `npm install dpp-merchant-sdk@alpha`. For monorepo development use `"dpp-merchant-sdk": "file:../../merchant-sdk"` in examples.
 
 ---
 
@@ -42,7 +42,7 @@ Agents and wallets construct capability tokens and intents; merchants **never** 
 sequenceDiagram
   participant Agent
   participant Merchant as Merchant API
-  participant SDK as @dpp/merchant-sdk
+  participant SDK as dpp-merchant-sdk
   participant PSP as Stripe/Razorpay
 
   Agent->>Merchant: capabilityToken + paymentIntent
@@ -72,7 +72,7 @@ Local development MAY use inline `jwks` from your wallet staging environment. Th
 ### Step 2 — Create the merchant client
 
 ```typescript
-import { createMerchant } from '@dpp/merchant-sdk';
+import { createMerchant } from 'dpp-merchant-sdk';
 
 const dpp = createMerchant({
   psp: 'stripe',

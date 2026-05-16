@@ -1,6 +1,6 @@
 # Express merchant server (reference example)
 
-Minimal **Express 5** server showing how to wire `@dpp/merchant-sdk` into HTTP routes: mint a test capability, verify delegation, charge via Stripe (or an in-memory mock), and handle webhooks.
+Minimal **Express 5** server showing how to wire `dpp-merchant-sdk` into HTTP routes: mint a test capability, verify delegation, charge via Stripe (or an in-memory mock), and handle webhooks.
 
 ## Prerequisites
 
