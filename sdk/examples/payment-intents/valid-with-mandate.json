@@ -1,0 +1,21 @@
+{
+  "dpp": "0.1",
+  "typ": "payment_intent",
+  "intentId": "pi_01HUP1",
+  "idempotencyKey": "idem_upi_02",
+  "amount": {
+    "value": "5000.00",
+    "currency": "INR"
+  },
+  "merchantId": "merchant:acme_in",
+  "rail": "upi",
+  "railClass": "C",
+  "mandateId": "mdt_01HDEF",
+  "metadata": {
+    "order_id": "ord_123"
+  },
+  "digest": {
+    "alg": "sha-256",
+    "value": "e072738be7b441c83a4d81082f6f7f4b7d3825733f96414106b50683440fe915"
+  }
+}

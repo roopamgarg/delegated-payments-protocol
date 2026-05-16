@@ -1,0 +1,72 @@
+openapi: 3.0.3
+info:
+  title: DPP Merchant Verification API (v0.1 sketch)
+  version: 0.1.0
+  description: >
+    Informative OpenAPI surface for wallet services polling intent status and for merchants
+    correlating settlements. Normative protocol text lives in docs/protocol/verification-flows.md.
+servers:
+  - url: https://wallet.example.com
+paths:
+  /v1/intents:
+    post:
+      summary: Submit payment intent with capability token
+      operationId: createIntent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentIntent, capabilityToken]
+              properties:
+                paymentIntent:
+                  type: object
+                  description: PaymentIntent JSON (see specs/schemas/payment-intent.schema.json)
+                capabilityToken:
+                  type: string
+                  description: Compact JWS capability JWT
+                idempotencyKey:
+                  type: string
+      responses:
+        '201':
+          description: Intent accepted for validation
+  /v1/intents/{intentId}:
+    get:
+      summary: Poll intent status and escalation handle
+      operationId: getIntent
+      parameters:
+        - in: path
+          name: intentId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current intent state machine position
+  /v1/intents/{intentId}/cancel:
+    post:
+      summary: Agent-cancel before settlement
+      operationId: cancelIntent
+      parameters:
+        - in: path
+          name: intentId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Cancel accepted
+  /v1/mandates/{mandateId}:
+    get:
+      summary: Read mandate status (agent read-only)
+      operationId: getMandate
+      parameters:
+        - in: path
+          name: mandateId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Mandate JSON (see specs/schemas/mandate.schema.json)

@@ -43,10 +43,15 @@ delegated-payments-protocol/
 
 | Component | Status |
 |-----------|--------|
-| Protocol research | In progress — see [docs/protocol/research.md](docs/protocol/research.md) |
-| v0.1 specification | Planned |
-| JSON schemas | Planned |
-| Merchant SDK | Planned |
+| Protocol research | Draft — [docs/protocol/research.md](docs/protocol/research.md) |
+| Capability token schema | v0.1 — [specs/schemas/capability-token.schema.json](specs/schemas/capability-token.schema.json) |
+| Payment intent + mandate schemas | v0.1 — [specs/schemas/payment-intent.schema.json](specs/schemas/payment-intent.schema.json), [specs/schemas/mandate.schema.json](specs/schemas/mandate.schema.json) |
+| Agent identity + payment intent specs | Draft — [docs/protocol/agent-identity.md](docs/protocol/agent-identity.md), [docs/protocol/payment-intents.md](docs/protocol/payment-intents.md) |
+| Verification & escalation | Draft — [docs/protocol/verification-flows.md](docs/protocol/verification-flows.md) |
+| Threat model | Draft — [docs/threat-model/v0.1.md](docs/threat-model/v0.1.md) |
+| UPI integration guide | Draft — [docs/integration-guides/upi.md](docs/integration-guides/upi.md) |
+| Merchant SDK (TypeScript) | v0.1 contract — [sdk/merchant-sdk/](sdk/merchant-sdk/) |
+| Reference Stripe example | [sdk/examples/stripe-delegated-payment/](sdk/examples/stripe-delegated-payment/) |
 
 ## Contributing
 

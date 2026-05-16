@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://delegated-payments-protocol.dev/schemas/v0.1/mandate.schema.json",
+  "title": "DPP Mandate v0.1",
+  "description": "Standing user authorization registered with an issuer or wallet (e.g., UPI autopay, SEPA mandate). Agents reference mandateId on class C rails; users create/revoke mandates only via wallet UI.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dpp",
+    "typ",
+    "mandateId",
+    "userRef",
+    "rail",
+    "maxAmountPerDebit",
+    "frequency",
+    "merchantScope",
+    "validFrom",
+    "validUntil",
+    "status"
+  ],
+  "properties": {
+    "dpp": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "typ": {
+      "type": "string",
+      "const": "mandate"
+    },
+    "mandateId": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "userRef": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "description": "Opaque wallet-local user reference; MUST NOT embed PII in logs."
+    },
+    "rail": {
+      "type": "string",
+      "enum": [
+        "upi_autopay",
+        "sepa_direct_debit",
+        "card_recurring",
+        "wallet_standing",
+        "other"
+      ]
+    },
+    "maxAmountPerDebit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "currency"],
+      "properties": {
+        "value": {
+          "type": "string",
+          "pattern": "^[0-9]+(\\.[0-9]{1,8})?$"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        }
+      }
+    },
+    "frequency": {
+      "type": "string",
+      "enum": [
+        "as_presented",
+        "daily",
+        "weekly",
+        "monthly",
+        "quarterly",
+        "yearly"
+      ]
+    },
+    "merchantScope": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^merchant:[a-z0-9][a-z0-9._-]*$"
+      }
+    },
+    "validFrom": {
+      "type": "string",
+      "minLength": 20,
+      "description": "RFC 3339 timestamp (informative); v0.1 uses string min length only for CI portability."
+    },
+    "validUntil": {
+      "type": "string",
+      "minLength": 20
+    },
+    "revokedAt": {
+      "description": "When null or omitted, mandate not revoked; when string, revocation instant in RFC 3339 form.",
+      "anyOf": [
+        { "type": "null" },
+        { "type": "string", "minLength": 20 }
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "suspended", "revoked", "expired"]
+    }
+  }
+}

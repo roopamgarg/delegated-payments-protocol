@@ -1,0 +1,17 @@
+{
+  "dpp": "0.1",
+  "typ": "payment_intent",
+  "intentId": "pi_01HABC",
+  "idempotencyKey": "idem_001",
+  "amount": {
+    "value": "10.00",
+    "currency": "USD"
+  },
+  "merchantId": "merchant:example_com",
+  "rail": "card",
+  "railClass": "B",
+  "digest": {
+    "alg": "sha-256",
+    "value": "fa1183e76b890f5cea60ea03d76bd8f2e6f32fee72f47e25669d68ae84b360db"
+  }
+}

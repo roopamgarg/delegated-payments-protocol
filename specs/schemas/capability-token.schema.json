@@ -114,7 +114,7 @@
           "uniqueItems": true,
           "items": {
             "type": "string",
-            "enum": ["card", "upi", "wallet", "bank_transfer"]
+            "enum": ["card", "upi", "wallet", "bank_transfer", "other"]
           },
           "description": "Optional restriction on payment rails."
         },

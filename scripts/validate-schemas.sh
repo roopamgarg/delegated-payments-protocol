@@ -2,33 +2,50 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SCHEMA="${ROOT}/specs/schemas/capability-token.schema.json"
-VALID_DIR="${ROOT}/sdk/examples/capability-tokens"
-INVALID_DIR="${VALID_DIR}"
 
 if ! command -v npx >/dev/null 2>&1; then
   echo "npx is required to run schema validation"
   exit 1
 fi
 
-validate() {
-  local file="$1"
-  npx --yes ajv-cli@5 validate -s "$SCHEMA" -d "$file" --spec=draft2020
+validate_suite() {
+  local title="$1"
+  local schema="$2"
+  local examples_dir="$3"
+
+  echo "== ${title} =="
+  echo "Schema: ${schema}"
+
+  local file
+  for file in "${examples_dir}"/valid-*.json; do
+    [[ -e "$file" ]] || continue
+    echo "Expect valid: ${file}"
+    npx --yes ajv-cli@5 validate -s "$schema" -d "$file" --spec=draft2020
+  done
+
+  for file in "${examples_dir}"/invalid-*.json; do
+    [[ -e "$file" ]] || continue
+    echo "Expect invalid: ${file}"
+    if npx --yes ajv-cli@5 validate -s "$schema" -d "$file" --spec=draft2020 2>/dev/null; then
+      echo "::error::Expected ${file} to fail validation"
+      exit 1
+    fi
+  done
 }
 
-echo "Schema: ${SCHEMA}"
+validate_suite \
+  "Capability tokens" \
+  "${ROOT}/specs/schemas/capability-token.schema.json" \
+  "${ROOT}/sdk/examples/capability-tokens"
 
-for file in "${VALID_DIR}"/valid-*.json; do
-  echo "Expect valid: ${file}"
-  validate "$file"
-done
+validate_suite \
+  "Payment intents" \
+  "${ROOT}/specs/schemas/payment-intent.schema.json" \
+  "${ROOT}/sdk/examples/payment-intents"
 
-for file in "${INVALID_DIR}"/invalid-*.json; do
-  echo "Expect invalid: ${file}"
-  if validate "$file" 2>/dev/null; then
-    echo "::error::Expected ${file} to fail validation"
-    exit 1
-  fi
-done
+validate_suite \
+  "Mandates" \
+  "${ROOT}/specs/schemas/mandate.schema.json" \
+  "${ROOT}/sdk/examples/mandates"
 
-echo "All capability token examples passed schema checks"
+echo "All JSON schema example suites passed"

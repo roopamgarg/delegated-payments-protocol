@@ -1,0 +1,16 @@
+{
+  "dpp": "0.1",
+  "typ": "mandate",
+  "mandateId": "mdt_01HDEF",
+  "userRef": "usr_opaque_001",
+  "rail": "upi_autopay",
+  "maxAmountPerDebit": {
+    "value": "5000.00",
+    "currency": "INR"
+  },
+  "frequency": "as_presented",
+  "merchantScope": ["merchant:acme_in"],
+  "validFrom": "2026-05-01T00:00:00Z",
+  "validUntil": "2027-05-01T00:00:00Z",
+  "status": "active"
+}

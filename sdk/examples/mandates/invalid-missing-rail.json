@@ -1,0 +1,15 @@
+{
+  "dpp": "0.1",
+  "typ": "mandate",
+  "mandateId": "mdt_bad01",
+  "userRef": "usr_opaque_002",
+  "maxAmountPerDebit": {
+    "value": "100.00",
+    "currency": "EUR"
+  },
+  "frequency": "monthly",
+  "merchantScope": ["merchant:example_com"],
+  "validFrom": "2026-05-01T00:00:00Z",
+  "validUntil": "2027-05-01T00:00:00Z",
+  "status": "active"
+}
