@@ -1,34 +1,73 @@
-# DPP Merchant SDK (v0.1 contract)
+# @dpp/merchant-sdk (v0.2 alpha)
 
-TypeScript types and a small **offline verifier** that checks whether a parsed capability token payload is consistent with a `PaymentIntent`.
+Production-oriented merchant SDK for the [Delegated Payments Protocol](https://github.com/roopamgarg/delegated-payments-protocol). Verifies capability tokens (JWS), validates delegation against payment intents, and orchestrates PSP charges with escalation handling per [verification-flows.md](../../docs/protocol/verification-flows.md).
 
-## Security notes
+## Install
 
-- **Validate JWT signatures** (JWS) and **issuer trust** before calling `verifyDelegation`.
-- This package does **not** implement JWKS fetch, revocation, or online introspection.
-- Amount comparison uses deterministic string logic suitable for demo and tests; high-scale merchants should substitute a certified decimal library.
+```bash
+npm install @dpp/merchant-sdk
+# Optional PSP peers:
+npm install stripe          # StripeAdapter
+npm install razorpay        # RazorpayAdapter
+```
 
-## Usage
+> **Alpha:** not yet published to npm. Build from source until release.
+
+## Quick start (Stripe)
 
 ```typescript
-import { verifyDelegation } from 'dpp-merchant-sdk';
+import { createMerchant } from '@dpp/merchant-sdk';
 
-const result = verifyDelegation({ capability, paymentIntent });
-if (result.verdict !== 'delegation_valid') {
-  throw new Error(result.reasons.join(','));
+const dpp = createMerchant({
+  psp: 'stripe',
+  trust: {
+    jwksUri: 'https://wallet.example/.well-known/jwks.json',
+    issuerAllowlist: ['https://wallet.example/issuer'],
+  },
+  credentials: {
+    secretKey: process.env.STRIPE_SECRET_KEY!,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+  },
+});
+
+const result = await dpp.processPayment({
+  capabilityToken: req.body.token, // compact JWS
+  paymentIntent: req.body.intent,
+});
+
+if (result.status === 'pending_user_action') {
+  // Surface 3DS / bank approval — do not fulfill yet
+  return res.json({ escalation: result.escalation, clientSecret: result.psp.clientSecret });
 }
 ```
 
-## Related specifications
+## API surface
 
-- [`specs/schemas/capability-token.schema.json`](../../specs/schemas/capability-token.schema.json)
-- [`specs/schemas/payment-intent.schema.json`](../../specs/schemas/payment-intent.schema.json)
-- [`docs/protocol/verification-flows.md`](../../docs/protocol/verification-flows.md)
+| Export | Purpose |
+|--------|---------|
+| `DPPMerchant` / `createMerchant` | End-to-end verify + charge |
+| `validateDelegation` | JWS + offline caveat checks |
+| `verifyDelegation` | Offline checks only (parsed payloads) |
+| `verifyCapabilityJws` | Signature + forbidden-claim gate |
+| `StripeAdapter` / `RazorpayAdapter` | PSP integrations |
+| `transition`, `canTransition` | Escalation state machine helpers |
+
+## Security
+
+- Built-in rejection of forbidden claims (`dpp:otpBypass`, etc.).
+- Configure `issuerAllowlist` and JWKS pinning in production.
+- Merchants verify delegation **before** rail handoff; OTP/3DS completion stays on the user channel.
+- Set `DPP_AUDIT_LOG=1` for structured audit lines.
 
 ## Develop
 
 ```bash
 cd sdk/merchant-sdk
 npm install
-npm run typecheck
+npm test
 ```
+
+## Related specifications
+
+- [`specs/schemas/capability-token.schema.json`](../../specs/schemas/capability-token.schema.json)
+- [`docs/protocol/verification-flows.md`](../../docs/protocol/verification-flows.md)

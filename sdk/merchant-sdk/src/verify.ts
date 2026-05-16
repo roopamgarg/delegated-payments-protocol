@@ -1,23 +1,5 @@
 import type { CapabilityTokenPayload, PaymentIntentPayload, VerifyDelegationResult } from './types.js';
-
-/**
- * Compare two non-negative decimal strings without floating point.
- * v0.1 limitation: assumes no exponential notation; production code should use a decimal library.
- */
-function decimalStringLte(value: string, max: string): boolean {
-  const norm = (s: string): string[] => {
-    const [whole, frac = ''] = s.split('.');
-    const w = whole.replace(/^0+/, '') || '0';
-    return [w, frac.replace(/0+$/, '')];
-  };
-  const [vw, vf] = norm(value);
-  const [mw, mf] = norm(max);
-  if (vw.length !== mw.length) return vw.length < mw.length;
-  if (vw !== mw) return vw < mw;
-  const a = vf.padEnd(8, '0');
-  const b = mf.padEnd(8, '0');
-  return a <= b;
-}
+import { amountLte } from './core/decimal.js';
 
 function nowUnix(): number {
   return Math.floor(Date.now() / 1000);
@@ -58,8 +40,14 @@ export function verifyDelegation(input: {
 
   if (pi.amount.currency !== cap.constraints.maxAmount.currency) {
     reasons.push('intent:currency_mismatch');
-  } else if (!decimalStringLte(pi.amount.value, cap.constraints.maxAmount.value)) {
-    reasons.push('intent:amount_exceeds_max');
+  } else {
+    try {
+      if (!amountLte(pi.amount.value, cap.constraints.maxAmount.value)) {
+        reasons.push('intent:amount_exceeds_max');
+      }
+    } catch {
+      reasons.push('intent:invalid_amount');
+    }
   }
 
   const methods = cap.constraints.paymentMethods;
