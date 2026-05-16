@@ -2,7 +2,7 @@
 
 **The open standard for delegated AI financial actions.**
 
-DPP enables AI agents to perform financial transactions on behalf of users while preserving user control, merchant trust, and full auditability. Version 0.1 is under active development.
+DPP enables AI agents to perform financial transactions on behalf of users while preserving user control, merchant trust, and full auditability. **DPP v0.1 spec of record:** tag [`v0.1.0-spec`](https://github.com/roopamgarg/delegated-payments-protocol/releases/tag/v0.1.0-spec) — see [docs/RELEASE.md](docs/RELEASE.md) for canonical artifacts and release policy.
 
 ## Mission
 
@@ -38,6 +38,13 @@ delegated-payments-protocol/
 │   └── examples/             # Integration examples
 └── .github/                  # CI, issue and PR templates
 ```
+
+## Spec of record
+
+| Item | Location |
+|------|----------|
+| v0.1 tag | [`v0.1.0-spec`](https://github.com/roopamgarg/delegated-payments-protocol/releases/tag/v0.1.0-spec) |
+| Release policy | [docs/RELEASE.md](docs/RELEASE.md) |
 
 ## Status
 
