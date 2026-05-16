@@ -1,0 +1,18 @@
+{
+  "name": "@dpp/example-express-merchant",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Express reference server for @dpp/merchant-sdk",
+  "scripts": {
+    "start": "node server.mjs",
+    "smoke": "node smoke.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@dpp/merchant-sdk": "file:../../merchant-sdk",
+    "express": "^5.1.0"
+  }
+}

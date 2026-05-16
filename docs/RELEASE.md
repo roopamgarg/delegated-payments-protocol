@@ -53,6 +53,7 @@ Schema `$id` URIs under `https://delegated-payments-protocol.dev/schemas/v0.1/` 
 |-------|------|
 | Research survey | `docs/protocol/research.md` |
 | UPI integration guide | `docs/integration-guides/upi.md` |
+| Merchant SDK integration guide | `docs/integration-guides/merchant-sdk.md` |
 | Threat model (draft) | `docs/threat-model/v0.1.md` |
 | ADR-001 capability model | `docs/architecture/adr-001-capability-token-model.md` |
 
@@ -68,6 +69,7 @@ Schema `$id` URIs under `https://delegated-payments-protocol.dev/schemas/v0.1/` 
 |----------|------|
 | Merchant SDK package + README | `sdk/merchant-sdk/` |
 | Reference Stripe-shaped example | `sdk/examples/stripe-delegated-payment/` |
+| Express merchant example | `sdk/examples/express-merchant/` |
 
 Implementers MAY copy schemas and docs from the tagged tree; they MUST NOT treat `main` after the tag as automatically normative until a new spec tag is published.
 

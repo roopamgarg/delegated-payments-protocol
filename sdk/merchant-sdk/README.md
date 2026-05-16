@@ -78,6 +78,10 @@ npm install
 npm test
 ```
 
+## Integration guide
+
+See [docs/integration-guides/merchant-sdk.md](../../docs/integration-guides/merchant-sdk.md) for end-to-end wiring, security checklist, and API reference. Run the [Express example](../examples/express-merchant/) locally.
+
 ## Related specifications
 
 - [`specs/schemas/capability-token.schema.json`](../../specs/schemas/capability-token.schema.json)
