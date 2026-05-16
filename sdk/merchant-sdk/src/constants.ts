@@ -43,8 +43,13 @@ export const INTENT_EVENT = {
 
 export type IntentEvent = (typeof INTENT_EVENT)[keyof typeof INTENT_EVENT];
 
+export const REQUIRED_CAPABILITY_SCOPE = {
+  PAY_INITIATE: 'pay:initiate',
+} as const;
+
 export const VERIFICATION_REASON = {
   CAPABILITY_UNSUPPORTED_TYPE: 'capability:unsupported_type',
+  CAPABILITY_INSUFFICIENT_SCOPE: 'capability:insufficient_scope',
   INTENT_UNSUPPORTED_TYPE: 'intent:unsupported_type',
   CAPABILITY_EXPIRED: 'capability:expired',
   CAPABILITY_NOT_YET_VALID: 'capability:not_yet_valid',

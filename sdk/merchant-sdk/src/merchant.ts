@@ -4,6 +4,7 @@ import { StripeAdapter, type StripeAdapterConfig } from './adapters/stripe.js';
 import { RazorpayAdapter, type RazorpayAdapterConfig } from './adapters/razorpay.js';
 import { validateDelegation, type ValidateDelegationResult } from './core/token-validator.js';
 import type { JwsTrustConfig } from './crypto/jws.js';
+import { assertProductionTrustConfig } from './crypto/trust-config.js';
 import { transition } from './core/state-machine.js';
 import { DPPError } from './errors.js';
 import {
@@ -153,5 +154,6 @@ export function createMerchant(config: DPPMerchantConfig, auditLogger?: AuditLog
   if (!config.trust.jwksUri && !config.trust.jwks) {
     throw new DPPError(DPP_ERROR_CODE.INVALID_TOKEN, 'DPPMerchant requires trust.jwksUri or trust.jwks');
   }
+  assertProductionTrustConfig(config.trust);
   return new DPPMerchant(config, auditLogger);
 }

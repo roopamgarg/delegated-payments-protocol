@@ -20,6 +20,13 @@ export type JwsTrustConfig = {
   readonly issuerAllowlist?: ReadonlyArray<string>;
   /** Expected JWT audiences; when set, `aud` must intersect. */
   readonly audience?: ReadonlyArray<string>;
+  /** Capability scopes required for payment (default: `pay:initiate`). */
+  readonly requiredScopes?: ReadonlyArray<string>;
+  /**
+   * When true, `createMerchant` does not require issuerAllowlist/audience.
+   * Use only in local tests and examples — never in production deployments.
+   */
+  readonly allowInsecureTrustConfig?: boolean;
   readonly clockSkewSeconds?: number;
 };
 

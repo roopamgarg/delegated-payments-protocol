@@ -30,6 +30,7 @@ async function bootstrap() {
     trust: {
       jwks,
       issuerAllowlist: [ISSUER],
+      allowInsecureTrustConfig: true,
     },
     credentials: {
       secretKey: process.env.STRIPE_SECRET_KEY ?? 'demo-stripe-secret-not-a-real-key',
