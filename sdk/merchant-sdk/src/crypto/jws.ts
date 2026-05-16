@@ -35,7 +35,10 @@ export type JwsTrustConfig = {
    */
   readonly allowInsecureTrustConfig?: boolean;
   readonly clockSkewSeconds?: number;
-  /** Replay store for `nonce` / `jti`; defaults to in-memory (single-node only). */
+  /**
+   * Replay store for `nonce` / `jti`. When omitted, `InMemoryNonceStore` is used
+   * (dev, tests, single-node). Horizontally scaled production MUST set a shared store.
+   */
   readonly nonceStore?: NonceStore;
 };
 

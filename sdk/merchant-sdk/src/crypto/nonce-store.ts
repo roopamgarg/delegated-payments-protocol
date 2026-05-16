@@ -10,6 +10,14 @@ export type NonceStore = {
   tryConsume(key: string, expiresAtUnix: number): Promise<boolean> | boolean;
 };
 
+/**
+ * Default {@link NonceStore} for local dev, tests, and single-node deployments.
+ *
+ * `verifyCapabilityJws` uses this when `trust.nonceStore` is omitted so replay
+ * protection works out of the box without Redis. It is **not** safe across multiple
+ * app instances or restarts — production merchants MUST inject a shared store
+ * (e.g. Redis `SET key NX EX ttl`) via `trust.nonceStore` on `JwsTrustConfig`.
+ */
 export class InMemoryNonceStore implements NonceStore {
   private readonly seen = new Map<string, number>();
 
@@ -33,9 +41,10 @@ export class InMemoryNonceStore implements NonceStore {
   }
 }
 
+/** Singleton used when {@link JwsTrustConfig.nonceStore} is not set. */
 const defaultStore = new InMemoryNonceStore();
 
-/** Process-wide in-memory store used when config omits `nonceStore`. */
+/** Returns the process-wide in-memory store (see {@link InMemoryNonceStore}). */
 export function getDefaultNonceStore(): NonceStore {
   return defaultStore;
 }
