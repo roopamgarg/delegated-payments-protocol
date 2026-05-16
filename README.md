@@ -57,8 +57,10 @@ delegated-payments-protocol/
 | Verification & escalation | Draft — [docs/protocol/verification-flows.md](docs/protocol/verification-flows.md) |
 | Threat model | Draft — [docs/threat-model/v0.1.md](docs/threat-model/v0.1.md) |
 | UPI integration guide | Draft — [docs/integration-guides/upi.md](docs/integration-guides/upi.md) |
+| Merchant SDK integration guide | Draft — [docs/integration-guides/merchant-sdk.md](docs/integration-guides/merchant-sdk.md) |
 | Merchant SDK (TypeScript) | v0.2 alpha — [`@dpp/merchant-sdk`](sdk/merchant-sdk/) (JWS + Stripe/Razorpay adapters) |
 | Reference Stripe example | [sdk/examples/stripe-delegated-payment/](sdk/examples/stripe-delegated-payment/) |
+| Express merchant example | [sdk/examples/express-merchant/](sdk/examples/express-merchant/) |
 
 ## Contributing
 
