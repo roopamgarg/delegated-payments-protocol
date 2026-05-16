@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createMerchant } from '../dist/merchant.js';
 import { DPP_ERROR_CODE, PSP_NAME } from '../dist/constants.js';
 
-const credentials = { secretKey: 'sk_test_demo_only' };
+const credentials = { secretKey: 'demo-stripe-secret-not-a-real-key' };
 const jwks = { keys: [{ kty: 'EC', crv: 'P-256', x: 'x', y: 'y', kid: 'demo' }] };
 
 test('createMerchant rejects production config without issuerAllowlist', () => {
