@@ -2,6 +2,7 @@ import type { CapabilityTokenPayload, PaymentIntentPayload, VerifyDelegationResu
 import { verifyDelegation } from '../verify.js';
 import { verifyCapabilityJws, type JwsTrustConfig } from '../crypto/jws.js';
 import { DPPError } from '../errors.js';
+import { DELEGATION_VERDICT, DPP_ERROR_CODE } from '../constants.js';
 
 export type ValidateDelegationInput = {
   readonly capabilityToken: string;
@@ -27,8 +28,8 @@ export async function validateDelegation(
     clockSkewSeconds: input.clockSkewSeconds ?? input.trust.clockSkewSeconds,
   });
 
-  if (result.verdict === 'delegation_invalid') {
-    throw new DPPError('delegation_invalid', result.reasons.join(','), {
+  if (result.verdict === DELEGATION_VERDICT.INVALID) {
+    throw new DPPError(DPP_ERROR_CODE.DELEGATION_INVALID, result.reasons.join(','), {
       reasons: result.reasons,
     });
   }

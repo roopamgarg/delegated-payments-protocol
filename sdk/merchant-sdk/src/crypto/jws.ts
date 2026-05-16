@@ -2,13 +2,14 @@ import * as jose from 'jose';
 import type { JSONWebKeySet } from 'jose';
 import type { CapabilityTokenPayload } from '../types.js';
 import { DPPError } from '../errors.js';
-
-/** Claims that MUST be rejected per verification-flows.md §6. */
-const FORBIDDEN_CLAIMS = [
-  'dpp:otpBypass',
-  'dpp:scaSatisfied',
-  'dpp:userPresentProof',
-] as const;
+import {
+  ARTIFACT_TYPE,
+  DEFAULT_CLOCK_SKEW_SECONDS,
+  DPP_ERROR_CODE,
+  DPP_VERSION,
+  FORBIDDEN_CLAIMS,
+  JWS,
+} from '../constants.js';
 
 export type JwsTrustConfig = {
   /** JWKS document URL for the wallet issuer. */
@@ -26,13 +27,15 @@ function assertCapabilityPayload(payload: jose.JWTPayload): CapabilityTokenPaylo
   const record = payload as Record<string, unknown>;
   for (const forbidden of FORBIDDEN_CLAIMS) {
     if (forbidden in record) {
-      throw new DPPError('forbidden_claim', `Token contains forbidden claim: ${forbidden}`, {
-        claim: forbidden,
-      });
+      throw new DPPError(
+        DPP_ERROR_CODE.FORBIDDEN_CLAIM,
+        `Token contains forbidden claim: ${forbidden}`,
+        { claim: forbidden },
+      );
     }
   }
-  if (record.dpp !== '0.1' || record.typ !== 'capability') {
-    throw new DPPError('invalid_token', 'Unsupported capability token type or version');
+  if (record.dpp !== DPP_VERSION || record.typ !== ARTIFACT_TYPE.CAPABILITY) {
+    throw new DPPError(DPP_ERROR_CODE.INVALID_TOKEN, 'Unsupported capability token type or version');
   }
   return payload as CapabilityTokenPayload;
 }
@@ -44,7 +47,7 @@ async function resolveJwks(config: JwsTrustConfig): Promise<JwksVerifier> {
   if (config.jwksUri) {
     return jose.createRemoteJWKSet(new URL(config.jwksUri));
   }
-  throw new DPPError('invalid_token', 'JWS trust config requires jwksUri or jwks');
+  throw new DPPError(DPP_ERROR_CODE.INVALID_TOKEN, 'JWS trust config requires jwksUri or jwks');
 }
 
 export async function verifyCapabilityJws(
@@ -52,7 +55,7 @@ export async function verifyCapabilityJws(
   trust: JwsTrustConfig,
 ): Promise<CapabilityTokenPayload> {
   const jwks = await resolveJwks(trust);
-  const skew = trust.clockSkewSeconds ?? 60;
+  const skew = trust.clockSkewSeconds ?? DEFAULT_CLOCK_SKEW_SECONDS;
 
   let payload: jose.JWTPayload;
   try {
@@ -63,7 +66,7 @@ export async function verifyCapabilityJws(
     payload = verified.payload;
   } catch (err) {
     throw new DPPError(
-      'invalid_signature',
+      DPP_ERROR_CODE.INVALID_SIGNATURE,
       err instanceof Error ? err.message : 'JWS verification failed',
     );
   }
@@ -74,7 +77,7 @@ export async function verifyCapabilityJws(
     trust.issuerAllowlist?.length &&
     !trust.issuerAllowlist.includes(capability.iss)
   ) {
-    throw new DPPError('untrusted_issuer', `Issuer not allowlisted: ${capability.iss}`, {
+    throw new DPPError(DPP_ERROR_CODE.UNTRUSTED_ISSUER, `Issuer not allowlisted: ${capability.iss}`, {
       iss: capability.iss,
     });
   }
@@ -86,10 +89,10 @@ export async function verifyCapabilityJws(
 export async function signCapabilityForTest(
   payload: CapabilityTokenPayload,
   privateKey: CryptoKey,
-  kid = 'test-key',
+  kid = JWS.TEST_KEY_ID,
 ): Promise<string> {
   return new jose.SignJWT(payload as unknown as jose.JWTPayload)
-    .setProtectedHeader({ alg: 'ES256', kid })
+    .setProtectedHeader({ alg: JWS.ALG_ES256, kid })
     .sign(privateKey);
 }
 
@@ -99,7 +102,7 @@ export async function generateTestKeyPair(): Promise<{
   privateKey: CryptoKey;
   publicJwk: jose.JWK;
 }> {
-  const { publicKey, privateKey } = await jose.generateKeyPair('ES256');
+  const { publicKey, privateKey } = await jose.generateKeyPair(JWS.ALG_ES256);
   const publicJwk = await jose.exportJWK(publicKey);
   return { publicKey, privateKey, publicJwk };
 }

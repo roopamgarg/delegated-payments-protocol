@@ -6,7 +6,21 @@ export type {
 } from './types.js';
 
 export { verifyDelegation } from './verify.js';
-export { DPPError, type DPPErrorCode } from './errors.js';
+export { DPPError, DPP_ERROR_CODE, type DPPErrorCode } from './errors.js';
+export {
+  ARTIFACT_TYPE,
+  AUDIT_EVENT,
+  DELEGATION_VERDICT,
+  DPP_VERSION,
+  FORBIDDEN_CLAIM,
+  INTENT_EVENT,
+  INTENT_STATE,
+  METADATA_KEY,
+  PSP_NAME,
+  REQUIRED_ACTION,
+  RESUME_HINT,
+  VERIFICATION_REASON,
+} from './constants.js';
 
 export { amountLte, assertValidAmount } from './core/decimal.js';
 export {

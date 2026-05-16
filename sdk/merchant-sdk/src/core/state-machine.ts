@@ -1,57 +1,44 @@
-/** Payment intent states per docs/protocol/verification-flows.md §4. */
-export type IntentState =
-  | 'created'
-  | 'validating'
-  | 'rejected'
-  | 'executing'
-  | 'pending_user_action'
-  | 'succeeded'
-  | 'failed'
-  | 'expired';
+import {
+  DPP_ERROR_CODE,
+  INTENT_EVENT,
+  INTENT_STATE,
+  type IntentEvent,
+  type IntentState,
+} from '../constants.js';
 
-export type IntentEvent =
-  | 'submit'
-  | 'validation_failed'
-  | 'validation_passed'
-  | 'rail_error'
-  | 'rail_requires_action'
-  | 'rail_succeeded'
-  | 'rail_failed'
-  | 'user_completed'
-  | 'user_denied'
-  | 'ttl_expired';
+export type { IntentEvent, IntentState };
 
 const TERMINAL: ReadonlySet<IntentState> = new Set([
-  'rejected',
-  'succeeded',
-  'failed',
-  'expired',
+  INTENT_STATE.REJECTED,
+  INTENT_STATE.SUCCEEDED,
+  INTENT_STATE.FAILED,
+  INTENT_STATE.EXPIRED,
 ]);
 
 const TRANSITIONS: Readonly<Record<IntentState, Readonly<Partial<Record<IntentEvent, IntentState>>>>> =
   {
-    created: { submit: 'validating' },
-    validating: {
-      validation_failed: 'rejected',
-      validation_passed: 'executing',
-      rail_error: 'failed',
+    [INTENT_STATE.CREATED]: { [INTENT_EVENT.SUBMIT]: INTENT_STATE.VALIDATING },
+    [INTENT_STATE.VALIDATING]: {
+      [INTENT_EVENT.VALIDATION_FAILED]: INTENT_STATE.REJECTED,
+      [INTENT_EVENT.VALIDATION_PASSED]: INTENT_STATE.EXECUTING,
+      [INTENT_EVENT.RAIL_ERROR]: INTENT_STATE.FAILED,
     },
-    rejected: {},
-    executing: {
-      rail_requires_action: 'pending_user_action',
-      rail_succeeded: 'succeeded',
-      rail_failed: 'failed',
-      rail_error: 'failed',
+    [INTENT_STATE.REJECTED]: {},
+    [INTENT_STATE.EXECUTING]: {
+      [INTENT_EVENT.RAIL_REQUIRES_ACTION]: INTENT_STATE.PENDING_USER_ACTION,
+      [INTENT_EVENT.RAIL_SUCCEEDED]: INTENT_STATE.SUCCEEDED,
+      [INTENT_EVENT.RAIL_FAILED]: INTENT_STATE.FAILED,
+      [INTENT_EVENT.RAIL_ERROR]: INTENT_STATE.FAILED,
     },
-    pending_user_action: {
-      user_completed: 'succeeded',
-      user_denied: 'failed',
-      rail_failed: 'failed',
-      ttl_expired: 'expired',
+    [INTENT_STATE.PENDING_USER_ACTION]: {
+      [INTENT_EVENT.USER_COMPLETED]: INTENT_STATE.SUCCEEDED,
+      [INTENT_EVENT.USER_DENIED]: INTENT_STATE.FAILED,
+      [INTENT_EVENT.RAIL_FAILED]: INTENT_STATE.FAILED,
+      [INTENT_EVENT.TTL_EXPIRED]: INTENT_STATE.EXPIRED,
     },
-    succeeded: {},
-    failed: {},
-    expired: {},
+    [INTENT_STATE.SUCCEEDED]: {},
+    [INTENT_STATE.FAILED]: {},
+    [INTENT_STATE.EXPIRED]: {},
   };
 
 export function isTerminalState(state: IntentState): boolean {
@@ -68,7 +55,7 @@ export function transition(
 ): { readonly state: IntentState; readonly terminal: boolean } {
   const next = TRANSITIONS[from][event];
   if (next === undefined) {
-    throw new Error(`invalid_state_transition:${from}:${event}`);
+    throw new Error(`${DPP_ERROR_CODE.INVALID_STATE_TRANSITION}:${from}:${event}`);
   }
   return { state: next, terminal: isTerminalState(next) };
 }

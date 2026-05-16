@@ -1,7 +1,18 @@
+import {
+  ARTIFACT_TYPE,
+  DPP_VERSION,
+  type DelegationVerdict,
+  DIGEST_ALG,
+  PAYMENT_RAIL,
+  RAIL_CLASS,
+} from './constants.js';
+
+export type { DelegationVerdict };
+
 /** Subset of capability token claims used for merchant verification (see specs/schemas/capability-token.schema.json). */
 export type CapabilityTokenPayload = {
-  readonly dpp: '0.1';
-  readonly typ: 'capability';
+  readonly dpp: typeof DPP_VERSION;
+  readonly typ: typeof ARTIFACT_TYPE.CAPABILITY;
   readonly iss: string;
   readonly sub: string;
   readonly aud?: ReadonlyArray<string>;
@@ -12,7 +23,9 @@ export type CapabilityTokenPayload = {
   readonly constraints: {
     readonly maxAmount: { readonly value: string; readonly currency: string };
     readonly merchantAllowlist: ReadonlyArray<string>;
-    readonly paymentMethods?: ReadonlyArray<'card' | 'upi' | 'wallet' | 'bank_transfer' | 'other'>;
+    readonly paymentMethods?: ReadonlyArray<
+      (typeof PAYMENT_RAIL)[keyof typeof PAYMENT_RAIL]
+    >;
     readonly requiresOtp?: boolean;
   };
   readonly delegation?: {
@@ -28,20 +41,18 @@ export type CapabilityTokenPayload = {
 };
 
 export type PaymentIntentPayload = {
-  readonly dpp: '0.1';
-  readonly typ: 'payment_intent';
+  readonly dpp: typeof DPP_VERSION;
+  readonly typ: typeof ARTIFACT_TYPE.PAYMENT_INTENT;
   readonly intentId: string;
   readonly idempotencyKey: string;
   readonly amount: { readonly value: string; readonly currency: string };
   readonly merchantId: string;
-  readonly rail: 'card' | 'upi' | 'wallet' | 'bank_transfer' | 'other';
-  readonly railClass: 'A' | 'B' | 'C' | 'D';
+  readonly rail: (typeof PAYMENT_RAIL)[keyof typeof PAYMENT_RAIL];
+  readonly railClass: (typeof RAIL_CLASS)[keyof typeof RAIL_CLASS];
   readonly mandateId?: string;
   readonly metadata?: Readonly<Record<string, string>>;
-  readonly digest: { readonly alg: 'sha-256'; readonly value: string };
+  readonly digest: { readonly alg: typeof DIGEST_ALG.SHA256; readonly value: string };
 };
-
-export type DelegationVerdict = 'delegation_valid' | 'delegation_invalid' | 'delegation_pending';
 
 export type VerifyDelegationResult = {
   readonly verdict: DelegationVerdict;
