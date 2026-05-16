@@ -59,6 +59,17 @@ if (result.status === 'pending_user_action') {
 - Merchants verify delegation **before** rail handoff; OTP/3DS completion stays on the user channel.
 - Set `DPP_AUDIT_LOG=1` for structured audit lines.
 
+## Publish (maintainers)
+
+After merge to `main`, from `sdk/merchant-sdk`:
+
+```bash
+npm login
+npm publish --tag alpha   # first v0.2.0-alpha.0
+```
+
+`prepublishOnly` runs the test suite. Promote to `latest` only after board sign-off on coverage and hardening follow-ups.
+
 ## Develop
 
 ```bash
