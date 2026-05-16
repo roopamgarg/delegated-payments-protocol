@@ -49,3 +49,21 @@ test('verifyDelegation rejects amount over max', () => {
   assert.equal(result.verdict, 'delegation_invalid');
   assert.ok(result.reasons.includes('intent:amount_exceeds_max'));
 });
+
+test('verifyDelegation rejects capability without pay:initiate', () => {
+  const result = verifyDelegation({
+    capability: { ...capability, scopes: ['pay:view'] },
+    paymentIntent,
+  });
+  assert.equal(result.verdict, 'delegation_invalid');
+  assert.ok(result.reasons.includes('capability:insufficient_scope'));
+});
+
+test('verifyDelegation honors custom requiredScopes', () => {
+  const result = verifyDelegation({
+    capability: { ...capability, scopes: ['pay:view'] },
+    paymentIntent,
+    requiredScopes: ['pay:view'],
+  });
+  assert.equal(result.verdict, 'delegation_valid');
+});

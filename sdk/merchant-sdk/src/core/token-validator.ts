@@ -25,6 +25,7 @@ export async function validateDelegation(
     capability,
     paymentIntent: input.paymentIntent,
     clockSkewSeconds: input.clockSkewSeconds ?? input.trust.clockSkewSeconds,
+    requiredScopes: input.trust.requiredScopes,
   });
 
   if (result.verdict === 'delegation_invalid') {

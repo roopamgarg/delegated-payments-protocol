@@ -1,5 +1,6 @@
 import type { CapabilityTokenPayload, PaymentIntentPayload, VerifyDelegationResult } from './types.js';
 import { amountLte } from './core/decimal.js';
+import { resolveRequiredScopes } from './crypto/trust-config.js';
 
 function nowUnix(): number {
   return Math.floor(Date.now() / 1000);
@@ -13,6 +14,7 @@ export function verifyDelegation(input: {
   readonly capability: CapabilityTokenPayload;
   readonly paymentIntent: PaymentIntentPayload;
   readonly clockSkewSeconds?: number;
+  readonly requiredScopes?: ReadonlyArray<string>;
 }): VerifyDelegationResult {
   const reasons: string[] = [];
   const skew = input.clockSkewSeconds ?? 60;
@@ -21,6 +23,17 @@ export function verifyDelegation(input: {
 
   if (cap.dpp !== '0.1' || cap.typ !== 'capability') {
     reasons.push('capability:unsupported_type');
+  }
+  if (!cap.scopes?.includes('pay:initiate')) {
+    reasons.push('capability:missing_scope');
+  }
+
+  const requiredScopes = resolveRequiredScopes({
+    requiredScopes: input.requiredScopes,
+  });
+  const tokenScopes = cap.scopes ?? [];
+  if (!requiredScopes.some((scope) => tokenScopes.includes(scope))) {
+    reasons.push('capability:insufficient_scope');
   }
   if (pi.dpp !== '0.1' || pi.typ !== 'payment_intent') {
     reasons.push('intent:unsupported_type');
