@@ -1,13 +1,6 @@
-export type DPPErrorCode =
-  | 'invalid_token'
-  | 'invalid_signature'
-  | 'untrusted_issuer'
-  | 'delegation_invalid'
-  | 'forbidden_claim'
-  | 'psp_error'
-  | 'psp_not_configured'
-  | 'invalid_state_transition'
-  | 'payment_not_found';
+import { DPP_ERROR_CLASS_NAME, DPP_ERROR_CODE, type DPPErrorCode } from './constants.js';
+
+export type { DPPErrorCode };
 
 export class DPPError extends Error {
   readonly code: DPPErrorCode;
@@ -19,8 +12,10 @@ export class DPPError extends Error {
     details?: Readonly<Record<string, unknown>>,
   ) {
     super(message);
-    this.name = 'DPPError';
+    this.name = DPP_ERROR_CLASS_NAME;
     this.code = code;
     this.details = details;
   }
 }
+
+export { DPP_ERROR_CODE };

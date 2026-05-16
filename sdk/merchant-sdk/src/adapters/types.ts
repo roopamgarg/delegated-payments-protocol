@@ -1,16 +1,21 @@
 import type { PaymentIntentPayload } from '../types.js';
-import type { IntentState } from '../core/state-machine.js';
+import type { IntentState } from '../constants.js';
+import {
+  INTENT_STATE,
+  type RequiredAction,
+  type ResumeHint,
+} from '../constants.js';
 
 export type PaymentStatus = IntentState;
 
 export type EscalationHandle = {
   readonly escalationId: string;
   readonly intentId: string;
-  readonly status: 'pending_user_action';
-  readonly requiredAction: 'otp' | 'sca' | 'approval' | '3ds';
+  readonly status: typeof INTENT_STATE.PENDING_USER_ACTION;
+  readonly requiredAction: RequiredAction;
   readonly userChannel: string;
   readonly expiresAt: string;
-  readonly resumeHint: 'poll_intent' | 'webhook';
+  readonly resumeHint: ResumeHint;
 };
 
 export type PSPPaymentResult = {

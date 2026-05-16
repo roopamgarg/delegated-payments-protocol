@@ -5,17 +5,26 @@ import { RazorpayAdapter, type RazorpayAdapterConfig } from './adapters/razorpay
 import { validateDelegation, type ValidateDelegationResult } from './core/token-validator.js';
 import type { JwsTrustConfig } from './crypto/jws.js';
 import { assertProductionTrustConfig } from './crypto/trust-config.js';
-import { transition, type IntentState } from './core/state-machine.js';
+import { transition } from './core/state-machine.js';
 import { DPPError } from './errors.js';
+import {
+  AUDIT_EVENT,
+  DPP_ERROR_CODE,
+  ENV,
+  INTENT_EVENT,
+  INTENT_STATE,
+  PSP_NAME,
+  type IntentState,
+} from './constants.js';
 
 export type DPPMerchantConfig =
   | {
-      readonly psp: 'stripe';
+      readonly psp: typeof PSP_NAME.STRIPE;
       readonly trust: JwsTrustConfig;
       readonly credentials: StripeAdapterConfig;
     }
   | {
-      readonly psp: 'razorpay';
+      readonly psp: typeof PSP_NAME.RAZORPAY;
       readonly trust: JwsTrustConfig;
       readonly credentials: RazorpayAdapterConfig;
     };
@@ -43,10 +52,17 @@ export type AuditLogEntry = {
 export type AuditLogger = (entry: AuditLogEntry) => void;
 
 const defaultAuditLogger: AuditLogger = (entry) => {
-  if (process.env.DPP_AUDIT_LOG === '1') {
+  if (process.env[ENV.AUDIT_LOG] === ENV.AUDIT_LOG_ENABLED) {
     console.info(JSON.stringify(entry));
   }
 };
+
+function adapterFor(config: DPPMerchantConfig): PSPAdapter {
+  if (config.psp === PSP_NAME.STRIPE) {
+    return new StripeAdapter(config.credentials);
+  }
+  return new RazorpayAdapter(config.credentials);
+}
 
 export class DPPMerchant {
   private readonly adapter: PSPAdapter;
@@ -56,10 +72,7 @@ export class DPPMerchant {
   constructor(config: DPPMerchantConfig, auditLogger: AuditLogger = defaultAuditLogger) {
     this.trust = config.trust;
     this.audit = auditLogger;
-    this.adapter =
-      config.psp === 'stripe'
-        ? new StripeAdapter(config.credentials)
-        : new RazorpayAdapter(config.credentials);
+    this.adapter = adapterFor(config);
   }
 
   async verify(input: ProcessPaymentInput): Promise<ValidateDelegationResult> {
@@ -71,23 +84,23 @@ export class DPPMerchant {
   }
 
   async processPayment(input: ProcessPaymentInput): Promise<ProcessPaymentResult> {
-    let state: IntentState = 'created';
+    let state: IntentState = INTENT_STATE.CREATED;
     const { paymentIntent } = input;
 
     this.audit({
       ts: new Date().toISOString(),
-      event: 'payment.submit',
+      event: AUDIT_EVENT.PAYMENT_SUBMIT,
       intentId: paymentIntent.intentId,
     });
 
-    ({ state } = transition(state, 'submit'));
+    ({ state } = transition(state, INTENT_EVENT.SUBMIT));
 
     let delegation: ValidateDelegationResult;
     try {
       delegation = await this.verify(input);
-      ({ state } = transition(state, 'validation_passed'));
+      ({ state } = transition(state, INTENT_EVENT.VALIDATION_PASSED));
     } catch (err) {
-      ({ state } = transition(state, 'validation_failed'));
+      ({ state } = transition(state, INTENT_EVENT.VALIDATION_FAILED));
       throw err;
     }
 
@@ -97,18 +110,18 @@ export class DPPMerchant {
       metadata: input.metadata,
     });
 
-    if (psp.status === 'pending_user_action') {
-      ({ state } = transition('executing', 'rail_requires_action'));
+    if (psp.status === INTENT_STATE.PENDING_USER_ACTION) {
+      ({ state } = transition(INTENT_STATE.EXECUTING, INTENT_EVENT.RAIL_REQUIRES_ACTION));
       this.audit({
         ts: new Date().toISOString(),
-        event: 'payment.escalation',
+        event: AUDIT_EVENT.PAYMENT_ESCALATION,
         intentId: paymentIntent.intentId,
         details: { escalationId: psp.escalation?.escalationId },
       });
-    } else if (psp.status === 'succeeded') {
-      ({ state } = transition('executing', 'rail_succeeded'));
-    } else if (psp.status === 'failed') {
-      ({ state } = transition('executing', 'rail_failed'));
+    } else if (psp.status === INTENT_STATE.SUCCEEDED) {
+      ({ state } = transition(INTENT_STATE.EXECUTING, INTENT_EVENT.RAIL_SUCCEEDED));
+    } else if (psp.status === INTENT_STATE.FAILED) {
+      ({ state } = transition(INTENT_STATE.EXECUTING, INTENT_EVENT.RAIL_FAILED));
     } else {
       state = psp.status;
     }
@@ -139,7 +152,7 @@ export class DPPMerchant {
 
 export function createMerchant(config: DPPMerchantConfig, auditLogger?: AuditLogger): DPPMerchant {
   if (!config.trust.jwksUri && !config.trust.jwks) {
-    throw new DPPError('invalid_token', 'DPPMerchant requires trust.jwksUri or trust.jwks');
+    throw new DPPError(DPP_ERROR_CODE.INVALID_TOKEN, 'DPPMerchant requires trust.jwksUri or trust.jwks');
   }
   assertProductionTrustConfig(config.trust);
   return new DPPMerchant(config, auditLogger);
