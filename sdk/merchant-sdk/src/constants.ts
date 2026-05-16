@@ -56,6 +56,9 @@ export const VERIFICATION_REASON = {
   INTENT_DIGEST_MISMATCH: 'intent:digest_mismatch',
 } as const;
 
+/** `Error.name` for {@link DPPError}. */
+export const DPP_ERROR_CLASS_NAME = 'DPPError' as const;
+
 export const DPP_ERROR_CODE = {
   INVALID_TOKEN: 'invalid_token',
   INVALID_SIGNATURE: 'invalid_signature',
