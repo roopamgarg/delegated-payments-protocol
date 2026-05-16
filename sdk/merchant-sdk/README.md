@@ -1,22 +1,22 @@
-# @dpp/merchant-sdk (v0.2 alpha)
+# dpp-merchant-sdk (v0.2 alpha)
 
 Production-oriented merchant SDK for the [Delegated Payments Protocol](https://github.com/roopamgarg/delegated-payments-protocol). Verifies capability tokens (JWS), validates delegation against payment intents, and orchestrates PSP charges with escalation handling per [verification-flows.md](../../docs/protocol/verification-flows.md).
 
 ## Install
 
 ```bash
-npm install @dpp/merchant-sdk
+npm install dpp-merchant-sdk@alpha
 # Optional PSP peers:
 npm install stripe          # StripeAdapter
 npm install razorpay        # RazorpayAdapter
 ```
 
-> **Alpha:** not yet published to npm. Build from source until release.
+> **npm:** Published as `dpp-merchant-sdk` (unscoped — `@dpp` org unavailable on npm). Install with `@alpha` tag.
 
 ## Quick start (Stripe)
 
 ```typescript
-import { createMerchant } from '@dpp/merchant-sdk';
+import { createMerchant } from 'dpp-merchant-sdk';
 
 const dpp = createMerchant({
   psp: 'stripe',

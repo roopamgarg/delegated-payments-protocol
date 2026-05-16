@@ -4,7 +4,7 @@ import {
   generateTestKeyPair,
   signCapabilityForTest,
   DPPError,
-} from '@dpp/merchant-sdk';
+} from 'dpp-merchant-sdk';
 import { ISSUER, sampleCapabilityClaims, samplePaymentIntent } from './fixtures.mjs';
 import { createMockStripe } from './mock-stripe.mjs';
 
