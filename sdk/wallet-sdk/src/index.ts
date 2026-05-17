@@ -31,7 +31,15 @@ export { DPPWalletIssuer, createWalletIssuer } from './issuer.js';
 
 export { issueCapability } from './capability.js';
 
+export { canonicalJsonStringify } from './core/canonical-json.js';
 export {
+  canTransition,
+  isTerminalState,
+  transition,
+} from './core/state-machine.js';
+
+export {
+  buildDigestPayload,
   computeIntentDigest,
   createIntent,
   getIntentStatus,

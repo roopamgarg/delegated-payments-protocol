@@ -46,10 +46,11 @@ export const RAIL_CLASS = {
   A: 'A',
   B: 'B',
   C: 'C',
+  D: 'D',
 } as const;
 
 export const DIGEST_ALG = {
-  SHA256: 'sha256',
+  SHA256: 'sha-256',
 } as const;
 
 export const DPP_OAUTH_SCOPE = {
