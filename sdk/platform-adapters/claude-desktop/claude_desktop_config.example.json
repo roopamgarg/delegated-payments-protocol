@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "dpp-payments": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/delegated-payments-protocol/sdk/mcp-payment-tool/dist/bin/dpp-mcp-payment.js"
+      ],
+      "env": {
+        "DPP_VAULT_MASTER_KEY": "<never commit>",
+        "DPP_OAUTH_CLIENT_ID": "<wallet client id>",
+        "DPP_MCP_AGENT_SUB": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGJpnn5uSiZuNR",
+        "DPP_WALLET_BASE_URL": "http://127.0.0.1:3350",
+        "DPP_MERCHANT_BASE_URL": "http://127.0.0.1:3340"
+      }
+    }
+  }
+}
