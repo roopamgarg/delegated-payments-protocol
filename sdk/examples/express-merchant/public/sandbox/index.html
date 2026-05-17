@@ -34,7 +34,45 @@
       </details>
     </aside>
 
-    <main class="layout">
+    <nav class="view-tabs" role="tablist" aria-label="Sandbox views">
+      <button type="button" class="view-tab active" data-view-tab="manual" role="tab" aria-selected="true">
+        Manual console
+      </button>
+      <button type="button" class="view-tab" data-view-tab="chat" role="tab" aria-selected="false">
+        Chat agent
+      </button>
+    </nav>
+
+    <div id="view-chat" class="view-panel" hidden>
+      <section class="panel chat-panel" aria-labelledby="chat-heading">
+        <h2 id="chat-heading">Sandbox chat agent</h2>
+        <p class="hint">
+          Demo agent only — parses payment requests locally. You must click <strong>Confirm payment</strong>; chat
+          never charges automatically.
+        </p>
+        <div id="chat-log" class="chat-log" role="log" aria-live="polite"></div>
+        <form id="chat-form" class="chat-form">
+          <label class="sr-only" for="chat-input">Message</label>
+          <input
+            type="text"
+            id="chat-input"
+            placeholder='e.g. Pay $10 to merchant:example_com'
+            autocomplete="off"
+          />
+          <button type="submit" class="primary">Send</button>
+        </form>
+        <div id="chat-preview" class="chat-preview" hidden>
+          <h3>Payment preview</h3>
+          <pre id="chat-preview-json" class="mono muted">—</pre>
+          <div class="chat-actions">
+            <button type="button" id="btn-chat-confirm" class="primary" disabled>Confirm payment</button>
+            <button type="button" id="btn-chat-cancel" class="secondary">Cancel</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <main id="view-manual" class="layout view-panel">
       <section class="panel" aria-labelledby="wallet-heading">
         <h2 id="wallet-heading">Wallet / setup</h2>
         <p class="hint">Mint a signed capability and payment intent for the demo merchant.</p>
@@ -149,5 +187,6 @@
     </footer>
 
     <script type="module" src="/sandbox/app.js"></script>
+    <script type="module" src="/sandbox/chat.mjs"></script>
   </body>
 </html>

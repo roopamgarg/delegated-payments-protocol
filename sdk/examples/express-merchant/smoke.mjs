@@ -43,6 +43,10 @@ try {
   if (!html.includes('DPP Sandbox Console')) throw new Error('sandbox HTML missing title');
   if (!html.includes('error-panel')) throw new Error('sandbox HTML missing error panel');
   if (!html.includes('bad-token-toggle')) throw new Error('sandbox HTML missing bad-token toggle');
+  if (!html.includes('chat-agent') && !html.includes('Chat agent')) {
+    throw new Error('sandbox HTML missing chat agent tab');
+  }
+  if (!html.includes('btn-chat-confirm')) throw new Error('sandbox HTML missing chat confirm');
 
   const mintPay = await fetch(`${base}/demo/capability`, { method: 'POST' }).then((r) => r.json());
 

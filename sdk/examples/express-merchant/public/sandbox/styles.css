@@ -129,6 +129,138 @@ button.ghost:hover {
   color: var(--ok);
 }
 
+.view-tabs {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.75rem 1.25rem 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.view-tab {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px 8px 0 0;
+}
+
+.view-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--surface);
+  background: var(--surface);
+}
+
+.view-panel {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+#view-chat {
+  padding: 0 1.25rem 1.25rem;
+}
+
+.chat-panel {
+  max-width: 720px;
+}
+
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-height: 12rem;
+  max-height: 18rem;
+  overflow-y: auto;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.chat-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.chat-role {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.chat-bubble {
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  max-width: 95%;
+}
+
+.chat-msg-user .chat-bubble {
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  align-self: flex-end;
+}
+
+.chat-msg-agent .chat-bubble {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.chat-msg-ok .chat-bubble {
+  border-color: var(--ok);
+}
+
+.chat-msg-warn .chat-bubble {
+  border-color: var(--warn);
+}
+
+.chat-msg-err .chat-bubble {
+  border-color: var(--err);
+}
+
+.chat-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.chat-form input {
+  flex: 1;
+}
+
+.chat-preview {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg));
+}
+
+.chat-preview h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.chat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
 .layout {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
