@@ -31,6 +31,8 @@ Server defaults to `http://127.0.0.1:3350`.
 npm run smoke
 ```
 
+Smoke harness env (optional): `DPP_SMOKE_ORIGIN`, `DPP_SMOKE_REDIRECT_URI`, `DPP_SMOKE_PORT` — defaults to `http://127.0.0.1:3352` and `{origin}/demo/oauth/callback`.
+
 ## Endpoints
 
 | Method | Path | Description |

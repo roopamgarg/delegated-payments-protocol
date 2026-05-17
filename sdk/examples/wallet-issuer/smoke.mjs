@@ -7,8 +7,13 @@ import { createHash, randomBytes } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 
-const PORT = 3352;
-const base = `http://127.0.0.1:${PORT}`;
+const PORT = Number(process.env.DPP_SMOKE_PORT ?? process.env.PORT ?? 3352);
+const smokeOrigin = (process.env.DPP_SMOKE_ORIGIN ?? `http://127.0.0.1:${PORT}`).replace(/\/$/, '');
+const base = smokeOrigin;
+const redirectUri =
+  process.env.DPP_SMOKE_REDIRECT_URI ?? 'http://127.0.0.1:8765/oauth/callback';
+const smokeIssuer =
+  process.env.WALLET_ISSUER ?? `${smokeOrigin.replace(/^http:/i, 'https:')}/issuer`;
 
 function pkcePair() {
   const codeVerifier = randomBytes(32).toString('base64url');
@@ -20,7 +25,7 @@ const child = spawn('node', ['server.mjs'], {
   env: {
     ...process.env,
     PORT: String(PORT),
-    WALLET_ISSUER: `https://127.0.0.1:${PORT}/issuer`,
+    WALLET_ISSUER: smokeIssuer,
   },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
@@ -50,7 +55,7 @@ try {
     body: JSON.stringify({
       sub: 'did:key:z6MkSmokeUnauthAgent',
       displayName: 'Smoke unauth',
-      redirectUris: ['http://127.0.0.1:8765/oauth/callback'],
+      redirectUris: [redirectUri],
     }),
   });
   if (unauthRegister.status !== 401) {
@@ -64,7 +69,6 @@ try {
   const state = 'smoke-state-1';
   const clientId = health.demoClientId;
   const agentSub = health.demoAgentSub;
-  const redirectUri = 'http://127.0.0.1:8765/oauth/callback';
   const scope = 'dpp:delegation:read dpp:delegation:issue';
 
   const authorizeUrl = new URL(`${base}/oauth/authorize`);
