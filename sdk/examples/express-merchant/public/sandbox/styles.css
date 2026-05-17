@@ -51,6 +51,84 @@ body {
   font-size: 0.9rem;
 }
 
+.error-panel {
+  margin: 0 1.25rem;
+  padding: 0.85rem 1rem 1rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--err) 55%, var(--border));
+  background: color-mix(in srgb, var(--err) 10%, var(--surface));
+  max-width: 1400px;
+}
+
+.error-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.error-panel h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--err);
+}
+
+.error-context {
+  margin: 0.35rem 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.error-fields {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.error-fields dt {
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.error-fields dd {
+  margin: 0;
+}
+
+button.ghost {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0.15rem 0.35rem;
+}
+
+button.ghost:hover {
+  color: var(--text);
+}
+
+.toggle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.toggle-row input {
+  margin-top: 0.2rem;
+}
+
+.verify-note {
+  margin-top: 0.5rem;
+  color: var(--ok);
+}
+
 .layout {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

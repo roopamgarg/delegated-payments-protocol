@@ -73,9 +73,13 @@ app.get('/health', (_req, res) => {
 
 /** Dev helper: mint a signed capability for the sample payment intent. */
 app.post('/demo/capability', async (_req, res) => {
-  const paymentIntent = samplePaymentIntent();
+  const suffix = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const paymentIntent = samplePaymentIntent({
+    intentId: `pi_demo_${suffix}`,
+    idempotencyKey: `idem_demo_${suffix}`,
+  });
   const capabilityToken = await signCapabilityForTest(
-    sampleCapabilityClaims(),
+    sampleCapabilityClaims({ nonce: `nonce_demo_${suffix}` }),
     testKeys.privateKey,
   );
   res.json({ capabilityToken, paymentIntent });
@@ -151,11 +155,15 @@ function sendDppError(res, err) {
           : err.code === 'invalid_signature' || err.code === 'invalid_token'
             ? 401
             : 500;
-    res.status(status).json({ code: err.code, message: err.message, details: err.details });
+    res.status(status).json({
+      code: err.code,
+      message: err.message,
+      details: err.details,
+    });
     return;
   }
   console.error(err);
-  res.status(500).json({ error: 'internal_error' });
+  res.status(500).json({ code: 'internal_error', message: 'An unexpected error occurred' });
 }
 
 await bootstrap();

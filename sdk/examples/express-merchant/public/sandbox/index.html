@@ -12,6 +12,28 @@
       <span class="banner-sub" id="banner-sub"></span>
     </header>
 
+    <aside class="error-panel" id="error-panel" hidden aria-live="polite" aria-labelledby="error-panel-heading">
+      <div class="error-panel-head">
+        <h2 id="error-panel-heading">Error</h2>
+        <button type="button" id="btn-dismiss-error" class="ghost" aria-label="Dismiss error">×</button>
+      </div>
+      <p class="error-context" id="error-context"></p>
+      <dl class="error-fields">
+        <div>
+          <dt>Code</dt>
+          <dd><code id="error-code">—</code></dd>
+        </div>
+        <div>
+          <dt>Message</dt>
+          <dd id="error-message">—</dd>
+        </div>
+      </dl>
+      <details class="json-block" id="error-details-wrap" hidden>
+        <summary>Details (safe fields only)</summary>
+        <pre id="error-details" class="mono muted">—</pre>
+      </details>
+    </aside>
+
     <main class="layout">
       <section class="panel" aria-labelledby="wallet-heading">
         <h2 id="wallet-heading">Wallet / setup</h2>
@@ -48,6 +70,11 @@
           <summary>Payment intent</summary>
           <pre id="intent-preview" class="mono muted">Not minted yet</pre>
         </details>
+
+        <label class="toggle-row">
+          <input type="checkbox" id="bad-token-toggle" />
+          Simulate invalid capability token (UI-05)
+        </label>
       </section>
 
       <section class="panel" aria-labelledby="agent-heading">
@@ -88,9 +115,12 @@
 
       <section class="panel" aria-labelledby="merchant-heading">
         <h2 id="merchant-heading">Merchant / audit</h2>
-        <p class="hint">Verify delegation only, or poll PSP status after a charge.</p>
+        <p class="hint">Verify delegation only (no PSP charge), or poll PSP status after a charge.</p>
 
-        <button type="button" id="btn-verify" class="secondary" disabled>Verify only</button>
+        <button type="button" id="btn-verify" class="secondary" disabled>Verify only (no charge)</button>
+        <p class="hint verify-note" id="verify-note" hidden>
+          Last verify: delegation checked — no PSP charge. Re-mint before Submit payment (nonce consumed on verify).
+        </p>
 
         <div class="poll-row">
           <label>
