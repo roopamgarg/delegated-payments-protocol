@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { createAgentVault, type AgentVault } from 'dpp-agent-vault';
+import { defaultDelegationPolicy } from './policy/defaults.js';
+import type { DelegationPolicy } from './policy/types.js';
 import type { McpPaymentConfig, PaymentPreviewRecord } from './types.js';
 
 export class McpPaymentSession {
@@ -7,6 +9,7 @@ export class McpPaymentSession {
   readonly vault: AgentVault;
   readonly #previews = new Map<string, PaymentPreviewRecord>();
   readonly #paymentsByPreview = new Map<string, string>();
+  readonly #delegationPolicies = new Map<string, DelegationPolicy>();
 
   constructor(config: McpPaymentConfig) {
     this.config = config;
@@ -35,5 +38,13 @@ export class McpPaymentSession {
 
   getPaymentIdForPreview(previewId: string): string | undefined {
     return this.#paymentsByPreview.get(previewId);
+  }
+
+  bindDelegationPolicy(delegationId: string, policy?: DelegationPolicy): void {
+    this.#delegationPolicies.set(delegationId, policy ?? defaultDelegationPolicy(this.config));
+  }
+
+  getDelegationPolicy(delegationId: string): DelegationPolicy | undefined {
+    return this.#delegationPolicies.get(delegationId);
   }
 }
