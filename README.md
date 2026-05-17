@@ -64,6 +64,7 @@ delegated-payments-protocol/
 | Wallet SDK API RFC + scaffold | Draft — [docs/rfc/dpp-wallet-sdk-api.md](docs/rfc/dpp-wallet-sdk-api.md), [sdk/wallet-sdk/](sdk/wallet-sdk/) |
 | Reference Stripe example | [sdk/examples/stripe-delegated-payment/](sdk/examples/stripe-delegated-payment/) |
 | Express merchant example | [sdk/examples/express-merchant/](sdk/examples/express-merchant/) |
+| Gemini payment adapter (function calling) | [sdk/platform-adapters/gemini/](sdk/platform-adapters/gemini/) |
 
 ## Contributing
 
