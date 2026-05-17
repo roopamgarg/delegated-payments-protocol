@@ -6,6 +6,7 @@ import {
   evaluatePreviewPaymentPolicy,
   policyDeniedToolPayload,
 } from '../policy/engine.js';
+import { denyIfVaultUserMismatch } from '../session-principal.js';
 import type { McpPaymentSession } from '../session.js';
 
 export async function handlePreviewPayment(
@@ -29,6 +30,9 @@ export async function handlePreviewPayment(
       message: 'Link wallet first (link_wallet).',
     };
   }
+
+  const vaultDenied = denyIfVaultUserMismatch(session, meta.userId);
+  if (vaultDenied) return vaultDenied;
 
   const policy = session.getDelegationPolicy(input.delegationId);
   if (!policy) {

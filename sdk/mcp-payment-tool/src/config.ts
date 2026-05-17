@@ -34,6 +34,7 @@ export function loadConfigFromEnv(): McpPaymentConfig {
       ).split(/\s+/),
     },
     vaultMasterKey: env('DPP_VAULT_MASTER_KEY'),
+    sessionUserId: env('DPP_SESSION_USER_ID'),
     defaultMerchantId,
     oauthCallbackHost: envOptional('DPP_OAUTH_CALLBACK_HOST', '127.0.0.1'),
     oauthCallbackPort: Number(envOptional('DPP_OAUTH_CALLBACK_PORT', '8765')),

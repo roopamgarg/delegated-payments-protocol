@@ -16,6 +16,10 @@ export class McpPaymentSession {
     this.vault = createAgentVault({ masterKey: config.vaultMasterKey });
   }
 
+  get sessionUserId(): string {
+    return this.config.sessionUserId;
+  }
+
   createPreviewId(): string {
     return `prev_${randomUUID().replace(/-/g, '')}`;
   }
