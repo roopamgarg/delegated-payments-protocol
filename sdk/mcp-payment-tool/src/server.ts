@@ -27,7 +27,7 @@ export function createMcpPaymentServer(config: McpPaymentConfig): McpServer {
       description:
         'Link the user wallet via OAuth PKCE. Returns an authorization URL or a safe delegation handle. Tokens stay in the server vault — never in model context.',
       inputSchema: {
-        userId: z.string().describe('Stable user id for vault partitioning'),
+        userId: z.string().describe('Must match DPP_SESSION_USER_ID for this MCP server process'),
         authorizationCode: z.string().optional().describe('OAuth code from redirect (second step)'),
         state: z.string().optional().describe('OAuth state from the first link_wallet call'),
         waitForCallbackSeconds: z

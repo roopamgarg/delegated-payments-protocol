@@ -1,0 +1,150 @@
+openapi: 3.0.3
+info:
+  title: DPP ChatGPT Actions (reference)
+  description: |
+    REST surface aligned with MCP payment tools. Authenticate requests with Bearer token or X-Api-Key
+    (`DPP_ACTIONS_API_KEY`). Send payer identity via `X-DPP-User-Id` (or optional JSON `userId` for demos)
+    — never fabricated by the LLM alone.
+  version: 0.1.0-alpha.0
+
+servers:
+  - url: http://127.0.0.1:8780
+    description: Local default (`DPP_ACTIONS_PUBLIC_URL`)
+
+components:
+  securitySchemes:
+    ActionsApiKey:
+      type: http
+      scheme: bearer
+      bearerFormat: DPP Actions API key
+    HeaderApiKey:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+
+paths:
+  /health:
+    get:
+      summary: Liveness probe
+      operationId: health
+      responses:
+        '200':
+          description: OK
+
+  /openapi.yaml:
+    get:
+      summary: Hosted OpenAPI spec (import into GPT builder)
+      operationId: getOpenApi
+      responses:
+        '200':
+          description: YAML body
+
+  /v1/link-wallet/start:
+    post:
+      summary: Begin wallet OAuth PKCE (first step)
+      operationId: linkWalletStart
+      security:
+        - ActionsApiKey: []
+        - HeaderApiKey: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                waitForCallbackSeconds:
+                  type: integer
+                  minimum: 0
+                  maximum: 120
+                userId:
+                  type: string
+                  description: Optional demo surrogate for ChatGPT-signed-in payer
+      responses:
+        '200':
+          description: Authorization URL or linked delegation
+
+  /v1/link-wallet/complete:
+    post:
+      summary: Complete OAuth with code + state
+      operationId: linkWalletComplete
+      security:
+        - ActionsApiKey: []
+        - HeaderApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [authorizationCode, state]
+              properties:
+                authorizationCode:
+                  type: string
+                state:
+                  type: string
+
+  /v1/payments/preview:
+    post:
+      summary: Preview payment intent (no charge)
+      operationId: previewPayment
+      security:
+        - ActionsApiKey: []
+        - HeaderApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [delegationId, amountValue, currency]
+              properties:
+                delegationId:
+                  type: string
+                amountValue:
+                  type: string
+                currency:
+                  type: string
+                merchantId:
+                  type: string
+                rail:
+                  type: string
+                idempotencyKey:
+                  type: string
+
+  /v1/payments/confirm:
+    post:
+      summary: Confirm preview and delegate charge
+      operationId: confirmPayment
+      security:
+        - ActionsApiKey: []
+        - HeaderApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [previewId]
+              properties:
+                previewId:
+                  type: string
+
+  /v1/payments/status:
+    get:
+      summary: Poll payment status
+      operationId: getPaymentStatus
+      security:
+        - ActionsApiKey: []
+        - HeaderApiKey: []
+      parameters:
+        - in: query
+          name: pspPaymentId
+          schema:
+            type: string
+        - in: query
+          name: previewId
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Status object
