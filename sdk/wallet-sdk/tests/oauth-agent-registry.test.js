@@ -6,6 +6,9 @@ import {
   DPP_ERROR_CODE,
   DPP_OAUTH_SCOPE,
   DPPError,
+  OAUTH_PKCE_METHOD,
+  OAUTH_RESPONSE_TYPE,
+  OAUTH_TOKEN_TYPE,
   issueAuthorizationCode,
 } from '../dist/index.js';
 
@@ -42,15 +45,15 @@ describe('dpp-wallet-sdk oauth + agent registry (AGE-38)', () => {
       scope: [DPP_OAUTH_SCOPE.DELEGATION_READ, DPP_OAUTH_SCOPE.INTENT_WRITE],
       state: 'csrf-state-1',
       codeChallenge,
-      codeChallengeMethod: 'S256',
+      codeChallengeMethod: OAUTH_PKCE_METHOD.S256,
       agentSub: agentProfile.sub,
     });
 
     const parsed = new URL(url);
     assert.equal(parsed.pathname, '/oauth/authorize');
-    assert.equal(parsed.searchParams.get('response_type'), 'code');
+    assert.equal(parsed.searchParams.get('response_type'), OAUTH_RESPONSE_TYPE.CODE);
     assert.equal(parsed.searchParams.get('client_id'), registered.clientId);
-    assert.equal(parsed.searchParams.get('code_challenge_method'), 'S256');
+    assert.equal(parsed.searchParams.get('code_challenge_method'), OAUTH_PKCE_METHOD.S256);
     assert.equal(parsed.searchParams.get('dpp_agent_sub'), agentProfile.sub);
     assert.equal(parsed.searchParams.get('state'), state);
   });
@@ -67,7 +70,7 @@ describe('dpp-wallet-sdk oauth + agent registry (AGE-38)', () => {
       scope,
       state: 'csrf-state-2',
       codeChallenge,
-      codeChallengeMethod: 'S256',
+      codeChallengeMethod: OAUTH_PKCE_METHOD.S256,
       agentSub: agentProfile.sub,
     });
 
@@ -78,7 +81,7 @@ describe('dpp-wallet-sdk oauth + agent registry (AGE-38)', () => {
       scope,
       state: 'csrf-state-2',
       codeChallenge,
-      codeChallengeMethod: 'S256',
+      codeChallengeMethod: OAUTH_PKCE_METHOD.S256,
       userId: 'user_01',
     });
 
@@ -89,7 +92,7 @@ describe('dpp-wallet-sdk oauth + agent registry (AGE-38)', () => {
       clientId: registered.clientId,
     });
 
-    assert.equal(tokens.tokenType, 'Bearer');
+    assert.equal(tokens.tokenType, OAUTH_TOKEN_TYPE.BEARER);
     assert.ok(tokens.delegationId.startsWith('dlg_'));
     assert.ok(tokens.accessToken.startsWith('dpp_at_'));
   });
@@ -110,7 +113,7 @@ describe('dpp-wallet-sdk oauth + agent registry (AGE-38)', () => {
           scope: [DPP_OAUTH_SCOPE.DELEGATION_READ],
           state: 'csrf-state-3',
           codeChallenge,
-          codeChallengeMethod: 'S256',
+          codeChallengeMethod: OAUTH_PKCE_METHOD.S256,
           userId: 'user_02',
         }),
       (err) => err instanceof DPPError && err.code === DPP_ERROR_CODE.DELEGATION_REVOKED,
@@ -131,7 +134,7 @@ describe('dpp-wallet-sdk oauth + agent registry (AGE-38)', () => {
           scope: [DPP_OAUTH_SCOPE.DELEGATION_READ],
           state: 'csrf-state-4',
           codeChallenge,
-          codeChallengeMethod: 'S256',
+          codeChallengeMethod: OAUTH_PKCE_METHOD.S256,
           agentSub: agentProfile.sub,
         }),
       (err) => err instanceof DPPError && err.code === DPP_ERROR_CODE.OAUTH_ERROR,

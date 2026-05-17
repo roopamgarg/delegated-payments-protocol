@@ -1,6 +1,6 @@
 import type { DPPWalletIssuer } from './issuer.js';
 import type { AgentProfile } from './types.js';
-import { DPP_ERROR_CODE } from './constants.js';
+import { AGENT_STATUS, DPP_ERROR_CODE } from './constants.js';
 import { DPPError } from './errors.js';
 import { newClientId } from './internal/ids.js';
 import { getIssuerState, userAgentKey, type RegisteredAgent } from './internal/issuer-state.js';
@@ -16,7 +16,7 @@ function requireActiveAgent(agent: RegisteredAgent | undefined, agentSub: string
       agentSub,
     });
   }
-  if (agent.status === 'revoked') {
+  if (agent.status === AGENT_STATUS.REVOKED) {
     throw new DPPError(DPP_ERROR_CODE.OAUTH_ERROR, `agent registration is revoked: ${agentSub}`, {
       agentSub,
     });
@@ -63,7 +63,7 @@ export async function registerAgent(
     displayName: profile.displayName,
     redirectUris: [...profile.redirectUris],
     clientId,
-    status: 'active',
+    status: AGENT_STATUS.ACTIVE,
     registeredAt: new Date().toISOString(),
   };
 
@@ -87,7 +87,7 @@ export async function revokeAgent(issuer: DPPWalletIssuer, agentSub: string): Pr
     });
   }
 
-  const revoked: RegisteredAgent = { ...agent, status: 'revoked' };
+  const revoked: RegisteredAgent = { ...agent, status: AGENT_STATUS.REVOKED };
   state.agentsBySub.set(agentSub, revoked);
   state.agentsByClientId.set(agent.clientId, revoked);
 

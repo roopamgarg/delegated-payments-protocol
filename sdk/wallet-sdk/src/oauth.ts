@@ -5,7 +5,15 @@ import type {
   OAuthTokenExchangeInput,
   OAuthTokenResponse,
 } from './types.js';
-import { DPP_ERROR_CODE } from './constants.js';
+import {
+  DPP_ERROR_CODE,
+  OAUTH_AUTHORIZE_PARAM,
+  OAUTH_PKCE_METHOD,
+  OAUTH_RESPONSE_TYPE,
+  OAUTH_TOKEN_TYPE,
+  OAUTH_TTL_SECONDS,
+  type OAuthPkceMethod,
+} from './constants.js';
 import { DPPError } from './errors.js';
 import { getRegisteredAgent, requireActiveAgent } from './agent-registry.js';
 import {
@@ -27,9 +35,6 @@ import {
   walletAuthorizeUrl,
 } from './internal/validate.js';
 
-const DEFAULT_CODE_TTL_SECONDS = 600;
-const DEFAULT_ACCESS_TOKEN_TTL_SECONDS = 3600;
-
 export type IssueAuthorizationCodeInput = {
   readonly clientId: string;
   readonly redirectUri: string;
@@ -37,7 +42,7 @@ export type IssueAuthorizationCodeInput = {
   readonly scope: ReadonlyArray<string>;
   readonly state: string;
   readonly codeChallenge: string;
-  readonly codeChallengeMethod: 'S256';
+  readonly codeChallengeMethod: OAuthPkceMethod;
   readonly userId: string;
   readonly ttlSeconds?: number;
 };
@@ -52,6 +57,12 @@ function assertRedirectUriAllowed(agentRedirectUris: ReadonlyArray<string>, redi
     throw new DPPError(DPP_ERROR_CODE.OAUTH_ERROR, 'redirect_uri does not match registered agent URIs', {
       redirectUri,
     });
+  }
+}
+
+function assertPkceMethod(method: string): asserts method is OAuthPkceMethod {
+  if (method !== OAUTH_PKCE_METHOD.S256) {
+    throw new DPPError(DPP_ERROR_CODE.OAUTH_ERROR, 'code_challenge_method MUST be S256');
   }
 }
 
@@ -76,9 +87,7 @@ export async function createAuthorizationUrl(
   validateRedirectUri(request.redirectUri);
   validateOAuthScopes(request.scope);
 
-  if (request.codeChallengeMethod !== 'S256') {
-    throw new DPPError(DPP_ERROR_CODE.OAUTH_ERROR, 'code_challenge_method MUST be S256');
-  }
+  assertPkceMethod(request.codeChallengeMethod);
   if (!isValidCodeChallenge(request.codeChallenge)) {
     throw new DPPError(DPP_ERROR_CODE.OAUTH_ERROR, 'code_challenge is invalid for S256 PKCE');
   }
@@ -93,24 +102,24 @@ export async function createAuthorizationUrl(
   assertRedirectUriAllowed(agent.redirectUris, request.redirectUri);
 
   const authorize = walletAuthorizeUrl(issuer.config.issuer);
-  authorize.searchParams.set('response_type', 'code');
-  authorize.searchParams.set('client_id', request.clientId);
-  authorize.searchParams.set('redirect_uri', request.redirectUri);
-  authorize.searchParams.set('scope', request.scope.join(' '));
-  authorize.searchParams.set('state', request.state);
-  authorize.searchParams.set('code_challenge', request.codeChallenge);
-  authorize.searchParams.set('code_challenge_method', 'S256');
-  authorize.searchParams.set('dpp_agent_sub', request.agentSub);
+  authorize.searchParams.set(OAUTH_AUTHORIZE_PARAM.RESPONSE_TYPE, OAUTH_RESPONSE_TYPE.CODE);
+  authorize.searchParams.set(OAUTH_AUTHORIZE_PARAM.CLIENT_ID, request.clientId);
+  authorize.searchParams.set(OAUTH_AUTHORIZE_PARAM.REDIRECT_URI, request.redirectUri);
+  authorize.searchParams.set(OAUTH_AUTHORIZE_PARAM.SCOPE, request.scope.join(' '));
+  authorize.searchParams.set(OAUTH_AUTHORIZE_PARAM.STATE, request.state);
+  authorize.searchParams.set(OAUTH_AUTHORIZE_PARAM.CODE_CHALLENGE, request.codeChallenge);
+  authorize.searchParams.set(OAUTH_AUTHORIZE_PARAM.CODE_CHALLENGE_METHOD, OAUTH_PKCE_METHOD.S256);
+  authorize.searchParams.set(OAUTH_AUTHORIZE_PARAM.DPP_AGENT_SUB, request.agentSub);
   if (request.resource) {
-    authorize.searchParams.set('resource', request.resource);
+    authorize.searchParams.set(OAUTH_AUTHORIZE_PARAM.RESOURCE, request.resource);
   } else {
-    authorize.searchParams.set('resource', new URL(issuer.config.issuer).origin);
+    authorize.searchParams.set(OAUTH_AUTHORIZE_PARAM.RESOURCE, new URL(issuer.config.issuer).origin);
   }
 
   return {
     url: authorize.toString(),
     state: request.state,
-    expiresAt: Date.now() + DEFAULT_CODE_TTL_SECONDS * 1000,
+    expiresAt: Date.now() + OAUTH_TTL_SECONDS.AUTHORIZATION_CODE * 1000,
   };
 }
 
@@ -124,9 +133,7 @@ export async function issueAuthorizationCode(
   validateOAuthScopes(input.scope);
   validateRedirectUri(input.redirectUri);
 
-  if (input.codeChallengeMethod !== 'S256') {
-    throw new DPPError(DPP_ERROR_CODE.OAUTH_ERROR, 'code_challenge_method MUST be S256');
-  }
+  assertPkceMethod(input.codeChallengeMethod);
   if (!isValidCodeChallenge(input.codeChallenge)) {
     throw new DPPError(DPP_ERROR_CODE.OAUTH_ERROR, 'code_challenge is invalid for S256 PKCE');
   }
@@ -138,7 +145,7 @@ export async function issueAuthorizationCode(
   assertRedirectUriAllowed(agent.redirectUris, input.redirectUri);
   assertDelegationAllowed(issuer, input.userId, input.agentSub);
 
-  const ttlSeconds = input.ttlSeconds ?? DEFAULT_CODE_TTL_SECONDS;
+  const ttlSeconds = input.ttlSeconds ?? OAUTH_TTL_SECONDS.AUTHORIZATION_CODE;
   const expiresAt = Date.now() + ttlSeconds * 1000;
   const code = newAuthorizationCode();
 
@@ -150,7 +157,7 @@ export async function issueAuthorizationCode(
     scope: [...input.scope],
     state: input.state,
     codeChallenge: input.codeChallenge,
-    codeChallengeMethod: 'S256',
+    codeChallengeMethod: OAUTH_PKCE_METHOD.S256,
     userId: input.userId,
     expiresAt,
     used: false,
@@ -202,7 +209,7 @@ export async function exchangeCode(
   const delegationId = newDelegationId();
   const accessToken = newAccessToken();
   const refreshToken = newRefreshToken();
-  const expiresIn = DEFAULT_ACCESS_TOKEN_TTL_SECONDS;
+  const expiresIn = OAUTH_TTL_SECONDS.ACCESS_TOKEN;
   const expiresAt = Date.now() + expiresIn * 1000;
 
   const delegation = {
@@ -222,7 +229,7 @@ export async function exchangeCode(
 
   return {
     accessToken,
-    tokenType: 'Bearer',
+    tokenType: OAUTH_TOKEN_TYPE.BEARER,
     expiresIn,
     refreshToken,
     scope: pending.scope.join(' '),
