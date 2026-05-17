@@ -16,22 +16,36 @@ let jwks;
 let dpp;
 
 async function bootstrap() {
-  testKeys = await generateTestKeyPair();
-  jwks = {
-    keys: [{ ...testKeys.publicJwk, kid: 'test-key', alg: 'ES256', use: 'sig' }],
-  };
+  const trustJwksUri = process.env.DPP_TRUST_JWKS_URI;
+  const trustIssuer =
+    process.env.DPP_TRUST_ISSUER ?? process.env.DPP_WALLET_ISSUER ?? null;
 
   const mockMode = process.env.DPP_MOCK_STRIPE_MODE ?? 'succeeded';
   const stripe =
     useLiveStripe ? undefined : createMockStripe(mockMode === 'requires_action' ? 'requires_action' : 'succeeded');
 
-  dpp = createMerchant({
-    psp: 'stripe',
-    trust: {
+  let trust;
+  if (trustJwksUri && trustIssuer) {
+    trust = {
+      jwksUri: trustJwksUri,
+      issuerAllowlist: trustIssuer.split(',').map((s) => s.trim()).filter(Boolean),
+      allowInsecureTrustConfig: true,
+    };
+  } else {
+    testKeys = await generateTestKeyPair();
+    jwks = {
+      keys: [{ ...testKeys.publicJwk, kid: 'test-key', alg: 'ES256', use: 'sig' }],
+    };
+    trust = {
       jwks,
       issuerAllowlist: [ISSUER],
       allowInsecureTrustConfig: true,
-    },
+    };
+  }
+
+  dpp = createMerchant({
+    psp: 'stripe',
+    trust,
     credentials: {
       secretKey: process.env.STRIPE_SECRET_KEY ?? 'demo-stripe-secret-not-a-real-key',
       webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
