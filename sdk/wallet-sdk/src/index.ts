@@ -47,14 +47,7 @@ export {
   submitIntent,
 } from './intent.js';
 
-export {
-  createAuthorizationUrl,
-  exchangeCode,
-  issueAuthorizationCode,
-  revokeDelegation,
-  type IssueAuthorizationCodeInput,
-  type IssuedAuthorizationCode,
-} from './oauth.js';
+export { createAuthorizationUrl, exchangeCode, revokeDelegation } from './oauth.js';
 
 export { registerAgent, revokeAgent } from './agent-registry.js';
 

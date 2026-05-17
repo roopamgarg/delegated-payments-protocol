@@ -113,7 +113,7 @@ function railOutcomeEvent(record: PaymentIntentRecord): IntentEvent {
   if (
     record.railClass === RAIL_CLASS.B ||
     record.railClass === RAIL_CLASS.C ||
-    record.railClass === 'D'
+    record.railClass === RAIL_CLASS.D
   ) {
     return INTENT_EVENT.RAIL_REQUIRES_ACTION;
   }

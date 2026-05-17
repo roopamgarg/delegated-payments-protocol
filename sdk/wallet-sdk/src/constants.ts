@@ -46,6 +46,7 @@ export const RAIL_CLASS = {
   A: 'A',
   B: 'B',
   C: 'C',
+  D: 'D',
 } as const;
 
 export const DIGEST_ALG = {
