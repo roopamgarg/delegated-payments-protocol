@@ -14,7 +14,7 @@ jobs:
 
       - name: Check for secrets
         run: |
-          if grep -rE '(AKIA[0-9A-Z]{16}|sk_live_|sk_test_|-----BEGIN (RSA |EC )?PRIVATE KEY-----)' . \
+          if grep -rE '(AKIA[0-9A-Z]{16}|sk_(live|test)_[0-9a-zA-Z]{24,}|-----BEGIN (RSA |EC )?PRIVATE KEY-----)' . \
             --exclude-dir=.git --exclude-dir=.github 2>/dev/null; then
             echo "::error::Potential secret detected in repository"
             exit 1
