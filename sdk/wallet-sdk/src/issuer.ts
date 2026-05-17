@@ -28,7 +28,7 @@ export type { DPPWalletIssuerConfig };
 
 /**
  * Root wallet issuer client — signs capabilities, orchestrates intents, and exposes OAuth helpers.
- * Scaffold: method signatures match the API RFC; implementations land in AGE-36–AGE-38.
+ * Alpha: OAuth/agent registry (AGE-38); capability, intent, and JWKS helpers remain scaffolded in AGE-36/37.
  */
 export class DPPWalletIssuer {
   readonly config: DPPWalletIssuerConfig;

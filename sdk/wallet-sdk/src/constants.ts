@@ -61,6 +61,48 @@ export const DPP_OAUTH_SCOPE = {
   RAIL_READ: 'dpp:rail:read',
 } as const;
 
+/** Agent registry lifecycle per wallet-oauth-linking.md §5.2. */
+export const AGENT_STATUS = {
+  ACTIVE: 'active',
+  REVOKED: 'revoked',
+} as const;
+
+export type AgentStatus = (typeof AGENT_STATUS)[keyof typeof AGENT_STATUS];
+
+/** OAuth 2.0 / PKCE values for wallet linking (RFC 7636, wallet-oauth-linking.md §6). */
+export const OAUTH_PKCE_METHOD = {
+  S256: 'S256',
+} as const;
+
+export type OAuthPkceMethod = (typeof OAUTH_PKCE_METHOD)[keyof typeof OAUTH_PKCE_METHOD];
+
+export const OAUTH_RESPONSE_TYPE = {
+  CODE: 'code',
+} as const;
+
+export const OAUTH_TOKEN_TYPE = {
+  BEARER: 'Bearer',
+} as const;
+
+/** Authorize endpoint query parameter names. */
+export const OAUTH_AUTHORIZE_PARAM = {
+  RESPONSE_TYPE: 'response_type',
+  CLIENT_ID: 'client_id',
+  REDIRECT_URI: 'redirect_uri',
+  SCOPE: 'scope',
+  STATE: 'state',
+  CODE_CHALLENGE: 'code_challenge',
+  CODE_CHALLENGE_METHOD: 'code_challenge_method',
+  DPP_AGENT_SUB: 'dpp_agent_sub',
+  RESOURCE: 'resource',
+} as const;
+
+/** Default TTLs aligned with wallet-oauth-linking.md (code ≤10 min). */
+export const OAUTH_TTL_SECONDS = {
+  AUTHORIZATION_CODE: 600,
+  ACCESS_TOKEN: 3600,
+} as const;
+
 /** `Error.name` for {@link DPPError}. */
 export const DPP_ERROR_CLASS_NAME = 'DPPError' as const;
 

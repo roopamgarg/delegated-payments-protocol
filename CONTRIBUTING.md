@@ -25,6 +25,27 @@ GitHub does not expose a “UI-only” merge flag. Policy is: agents and automat
 | `docs/` | Documentation-only changes |
 | `fix/` | Bug fixes and corrections |
 
+## Stacked pull requests (dependent work)
+
+When a Paperclip issue is **blocked by** another issue (or logically depends on unmerged code), do **not** open a second PR directly to `main` that re-implements the same foundation.
+
+1. **Branch from the blocker** — e.g. `git checkout -b feature/AGE-36-… feature/AGE-38-…` after the scaffold PR exists.
+2. **Open a stacked PR** — set the PR **base** to the blocker branch (not `main`) until the blocker merges.
+3. **Retarget after merge** — when the base PR merges to `main`, rebase your branch on `origin/main`, change the PR base to `main`, and force-push with lease:
+
+   ```bash
+   gh pr edit <pr-number> --base main
+   git fetch origin main
+   git rebase origin/main
+   git push --force-with-lease
+   ```
+
+4. **One concern per PR** — the diff against the effective base should contain only commits for that issue (no duplicate scaffold or doc commits already on `main`).
+
+**Wallet SDK merge train (example):** scaffold → parallel SDK slices (OAuth, capability, intent FSM) → demos/MVP stacked on capability → KMS (#AGE-50) stacked on capability, not `main`.
+
+Agent sessions with non-empty `blockedByIssueIds` must stack on the blocker branch instead of targeting `main`.
+
 ## What We Accept
 
 - Protocol specifications and JSON schemas
