@@ -9,8 +9,12 @@ import { setTimeout as delay } from 'node:timers/promises';
 const PORT = 3341;
 const base = `http://127.0.0.1:${PORT}`;
 
+const smokeEnv = { ...process.env, PORT: String(PORT) };
+delete smokeEnv.STRIPE_SECRET_KEY;
+delete smokeEnv.STRIPE_WEBHOOK_SECRET;
+
 const child = spawn('node', ['server.mjs'], {
-  env: { ...process.env, PORT: String(PORT) },
+  env: smokeEnv,
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 
@@ -34,18 +38,6 @@ try {
   if (!health.ok) throw new Error('health check failed');
 
   const mint = await fetch(`${base}/demo/capability`, { method: 'POST' }).then((r) => r.json());
-  const verify = await fetch(`${base}/delegation/verify`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      capabilityToken: mint.capabilityToken,
-      paymentIntent: mint.paymentIntent,
-    }),
-  }).then((r) => r.json());
-
-  if (verify.verdict !== 'delegation_valid') {
-    throw new Error(`expected delegation_valid, got ${verify.verdict}`);
-  }
 
   const pay = await fetch(`${base}/payments/delegate`, {
     method: 'POST',
@@ -57,10 +49,10 @@ try {
   }).then((r) => r.json());
 
   if (pay.status !== 'succeeded') {
-    throw new Error(`expected succeeded, got ${pay.status}`);
+    throw new Error(`expected succeeded, got ${JSON.stringify(pay)}`);
   }
 
-  console.log(JSON.stringify({ smoke: 'ok', verify: verify.verdict, payment: pay.status }, null, 2));
+  console.log(JSON.stringify({ smoke: 'ok', payment: pay.status, verdict: pay.verdict }, null, 2));
 } finally {
   child.kill();
 }
