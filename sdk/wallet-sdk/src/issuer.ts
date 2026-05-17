@@ -25,6 +25,7 @@ import { SigningKeyRing } from './crypto/key-ring.js';
 import { DPP_ERROR_CODE } from './constants.js';
 import { DPPError } from './errors.js';
 import type { SigningKeyMaterial } from './types.js';
+import type { KmsEs256Signer } from './crypto/kms-signer.js';
 
 export type { DPPWalletIssuerConfig };
 
@@ -34,10 +35,17 @@ export type { DPPWalletIssuerConfig };
 export class DPPWalletIssuer {
   readonly config: DPPWalletIssuerConfig;
   readonly signingKeyRing: SigningKeyRing;
+  private kmsSigner?: KmsEs256Signer;
 
   constructor(config: DPPWalletIssuerConfig) {
     this.config = config;
+    this.kmsSigner = config.kmsSigner;
     this.signingKeyRing = new SigningKeyRing(config.signingKey, config.keyRotation);
+  }
+
+  /** Resolved KMS signer for the active key (config injection or post-rotation update). */
+  getActiveKmsSigner(): KmsEs256Signer | undefined {
+    return this.kmsSigner;
   }
 
   issueCapability(input: CapabilityClaimsInput): Promise<IssueCapabilityResult> {
@@ -88,7 +96,13 @@ export class DPPWalletIssuer {
     return exportJwks(this);
   }
 
-  rotateKeys(nextSigningKey: SigningKeyMaterial): Promise<{ keys: ReadonlyArray<JsonWebKey> }> {
+  rotateKeys(
+    nextSigningKey: SigningKeyMaterial,
+    kmsSigner?: KmsEs256Signer,
+  ): Promise<{ keys: ReadonlyArray<JsonWebKey> }> {
+    if (kmsSigner) {
+      this.kmsSigner = kmsSigner;
+    }
     return rotateKeys(this, nextSigningKey);
   }
 }
