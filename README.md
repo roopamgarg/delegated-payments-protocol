@@ -35,6 +35,7 @@ delegated-payments-protocol/
 │   └── openapi/              # API definitions
 ├── sdk/
 │   ├── merchant-sdk/         # Merchant verification SDK
+│   ├── wallet-sdk/           # Wallet issuer SDK (scaffold)
 │   └── examples/             # Integration examples
 └── .github/                  # CI, issue and PR templates
 ```
@@ -60,6 +61,7 @@ delegated-payments-protocol/
 | UPI integration guide | Draft — [docs/integration-guides/upi.md](docs/integration-guides/upi.md) |
 | Merchant SDK integration guide | Draft — [docs/integration-guides/merchant-sdk.md](docs/integration-guides/merchant-sdk.md) |
 | Merchant SDK (TypeScript) | v0.2 alpha — [`dpp-merchant-sdk`](https://www.npmjs.com/package/dpp-merchant-sdk) on npm ([source](sdk/merchant-sdk/)) |
+| Wallet SDK API RFC + scaffold | Draft — [docs/rfc/dpp-wallet-sdk-api.md](docs/rfc/dpp-wallet-sdk-api.md), [sdk/wallet-sdk/](sdk/wallet-sdk/) |
 | Reference Stripe example | [sdk/examples/stripe-delegated-payment/](sdk/examples/stripe-delegated-payment/) |
 | Express merchant example | [sdk/examples/express-merchant/](sdk/examples/express-merchant/) |
 

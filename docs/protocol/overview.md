@@ -22,4 +22,5 @@ The Delegated Payments Protocol (DPP) defines how users delegate bounded payment
 | [wallet-oauth-linking.md](./wallet-oauth-linking.md) | Draft — wallet↔agent OAuth/OIDC linking |
 | [payment-intents.md](./payment-intents.md) | Draft — payment intent + digest rules |
 | [verification-flows.md](./verification-flows.md) | Draft — OTP and escalation |
+| [dpp-wallet-sdk API RFC](../rfc/dpp-wallet-sdk-api.md) | Draft — wallet issuer SDK contract |
 | [ADR-001](../architecture/adr-001-capability-token-model.md) | Accepted (draft) — token model |
