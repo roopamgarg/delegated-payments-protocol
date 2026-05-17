@@ -9,7 +9,16 @@ import {
   computeIntentDigest,
   type PaymentIntentInput,
 } from 'dpp-wallet-sdk';
+import type { DelegationPolicy } from '../policy/types.js';
 import type { McpPaymentConfig } from '../types.js';
+
+export function delegationConstraintsFromPolicy(policy: DelegationPolicy): Record<string, unknown> {
+  return {
+    maxAmount: { ...policy.maxAmount },
+    merchantAllowlist: [...policy.merchantAllowlist],
+    paymentMethods: [...policy.paymentMethods],
+  };
+}
 
 export type OAuthTokenBundle = {
   readonly accessToken: string;
@@ -106,11 +115,14 @@ export async function issueCapability(
       agentSub: config.oauth.agentSub,
       scopes: ['pay:initiate'],
       intentBind: input.intentBind,
-      constraints: input.constraints ?? {
-        maxAmount: { value: '25.00', currency: 'USD' },
-        merchantAllowlist: [config.defaultMerchantId],
-        paymentMethods: ['card'],
-      },
+      constraints:
+        input.constraints ??
+        delegationConstraintsFromPolicy({
+          maxAmount: { value: '25.00', currency: 'USD' },
+          merchantAllowlist: [config.defaultMerchantId],
+          paymentMethods: ['card'],
+          previewMaxAgeSeconds: 300,
+        }),
     }),
   });
   const body = (await res.json()) as Record<string, unknown>;
