@@ -42,7 +42,7 @@ export type PaymentIntentInput = {
 export type PaymentIntentRecord = PaymentIntentInput & {
   readonly dpp: typeof DPP_VERSION;
   readonly typ: typeof ARTIFACT_TYPE.PAYMENT_INTENT;
-  readonly digest: { readonly alg: 'sha256'; readonly value: string };
+  readonly digest: { readonly alg: 'sha-256'; readonly value: string };
   readonly state: IntentState;
   readonly createdAt: string;
   readonly updatedAt: string;

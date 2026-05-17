@@ -49,7 +49,7 @@ export const RAIL_CLASS = {
 } as const;
 
 export const DIGEST_ALG = {
-  SHA256: 'sha256',
+  SHA256: 'sha-256',
 } as const;
 
 export const DPP_OAUTH_SCOPE = {
