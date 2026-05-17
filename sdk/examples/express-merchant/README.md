@@ -102,6 +102,10 @@ Browser UI for manual verification (board demos). Served at `http://127.0.0.1:33
 
 For Stripe Test Mode (UI-01–03), use `npm run sandbox` with `sk_test_…` in `.env.local`.
 
+### Chat agent tab (UI-3)
+
+Switch to **Chat agent** in the sandbox UI. Example: `Pay $10 to merchant:example_com` → review preview → **Confirm payment** (chat never charges without confirm).
+
 ### Guardrail check
 
 ```bash
