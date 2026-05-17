@@ -1,0 +1,53 @@
+{
+  "name": "dpp-mcp-payment-tool",
+  "version": "0.1.0-alpha.0",
+  "description": "Reference MCP server for DPP delegated payments — link_wallet, preview_payment, confirm_payment, get_payment_status.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "dpp-mcp-payment": "dist/bin/dpp-mcp-payment.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/bin/dpp-mcp-payment.js",
+    "test": "npm run build && node --test tests/*.test.js",
+    "prepublishOnly": "npm run test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "dpp-agent-vault": "file:../agent-vault",
+    "dpp-wallet-sdk": "file:../wallet-sdk",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.4.5"
+  },
+  "keywords": [
+    "dpp",
+    "mcp",
+    "delegated-payments",
+    "model-context-protocol"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roopamgarg/delegated-payments-protocol.git",
+    "directory": "sdk/mcp-payment-tool"
+  }
+}
