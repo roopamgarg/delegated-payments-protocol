@@ -40,6 +40,7 @@ async function storeLinkedDelegation(
       scope: tokens.scope,
       walletIssuer: config.walletIssuer,
     });
+    session.bindDelegationPolicy(handle.delegationId);
     return { status: 'linked', delegation: sanitizeForLlm(handle) };
   } catch (err) {
     return {

@@ -1,6 +1,14 @@
 import { assertSafeForLlmContext } from 'dpp-agent-vault';
 import { delegatePayment } from '../clients/merchant-client.js';
-import { issueCapability, mapWalletErrorToToolCode } from '../clients/wallet-client.js';
+import {
+  delegationConstraintsFromPolicy,
+  issueCapability,
+  mapWalletErrorToToolCode,
+} from '../clients/wallet-client.js';
+import {
+  evaluateConfirmPaymentPolicy,
+  policyDeniedToolPayload,
+} from '../policy/engine.js';
 import type { McpPaymentSession } from '../session.js';
 
 export async function handleConfirmPayment(
@@ -14,6 +22,36 @@ export async function handleConfirmPayment(
       code: 'preview_not_found',
       message: 'Call preview_payment first.',
     };
+  }
+
+  const policy = session.getDelegationPolicy(preview.delegationId);
+  if (!policy) {
+    return {
+      status: 'error',
+      code: 'preview_not_found',
+      message: 'Call preview_payment first.',
+    };
+  }
+
+  let delegationMeta;
+  try {
+    delegationMeta = session.vault.getMeta(preview.delegationId);
+  } catch {
+    return {
+      status: 'error',
+      code: 'link_expired',
+      message: 'Wallet delegation missing or expired — re-link with link_wallet.',
+    };
+  }
+
+  const policyDecision = evaluateConfirmPaymentPolicy({
+    policy,
+    delegation: delegationMeta,
+    intent: preview.intentInput,
+    previewCreatedAt: preview.createdAt,
+  });
+  if (!policyDecision.allowed) {
+    return policyDeniedToolPayload(policyDecision);
   }
 
   const secrets = session.vault.getSecrets(preview.delegationId);
@@ -30,6 +68,7 @@ export async function handleConfirmPayment(
     const issued = await issueCapability(session.config, {
       accessToken: secrets.accessToken,
       intentBind: preview.digestHex,
+      constraints: delegationConstraintsFromPolicy(policy),
     });
     capabilityToken = issued.capabilityToken;
     session.vault.storeCapability({

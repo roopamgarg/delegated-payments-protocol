@@ -9,7 +9,23 @@ import {
   computeIntentDigest,
   type PaymentIntentInput,
 } from 'dpp-wallet-sdk';
+import {
+  MCP_TOOL_CODE,
+  POLICY_DEFAULT_CURRENCY,
+  POLICY_DEFAULT_MAX_AMOUNT_VALUE,
+  POLICY_DEFAULT_PAYMENT_METHODS,
+  POLICY_DEFAULT_PREVIEW_MAX_AGE_SECONDS,
+} from '../policy/constants.js';
+import type { DelegationPolicy } from '../policy/types.js';
 import type { McpPaymentConfig } from '../types.js';
+
+export function delegationConstraintsFromPolicy(policy: DelegationPolicy): Record<string, unknown> {
+  return {
+    maxAmount: { ...policy.maxAmount },
+    merchantAllowlist: [...policy.merchantAllowlist],
+    paymentMethods: [...policy.paymentMethods],
+  };
+}
 
 export type OAuthTokenBundle = {
   readonly accessToken: string;
@@ -106,11 +122,17 @@ export async function issueCapability(
       agentSub: config.oauth.agentSub,
       scopes: ['pay:initiate'],
       intentBind: input.intentBind,
-      constraints: input.constraints ?? {
-        maxAmount: { value: '25.00', currency: 'USD' },
-        merchantAllowlist: [config.defaultMerchantId],
-        paymentMethods: ['card'],
-      },
+      constraints:
+        input.constraints ??
+        delegationConstraintsFromPolicy({
+          maxAmount: {
+            value: POLICY_DEFAULT_MAX_AMOUNT_VALUE,
+            currency: POLICY_DEFAULT_CURRENCY,
+          },
+          merchantAllowlist: [config.defaultMerchantId],
+          paymentMethods: [...POLICY_DEFAULT_PAYMENT_METHODS],
+          previewMaxAgeSeconds: POLICY_DEFAULT_PREVIEW_MAX_AGE_SECONDS,
+        }),
     }),
   });
   const body = (await res.json()) as Record<string, unknown>;
@@ -156,6 +178,6 @@ export function mapWalletErrorToToolCode(err: unknown): string {
   }
   if (err.status === 401) return 'link_expired';
   if (err.status === 403 && err.code === 'agent_disabled') return 'agent_revoked';
-  if (err.status === 403) return 'policy_denied';
+  if (err.status === 403) return MCP_TOOL_CODE.POLICY_DENIED;
   return 'wallet_error';
 }

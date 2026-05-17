@@ -2,6 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { assertSafeForLlmContext, sanitizeForLlm } from 'dpp-agent-vault';
 import { PAYMENT_RAIL, RAIL_CLASS, computeIntentDigest } from 'dpp-wallet-sdk';
 import { buildPaymentIntentRecord } from '../clients/wallet-client.js';
+import {
+  evaluatePreviewPaymentPolicy,
+  policyDeniedToolPayload,
+} from '../policy/engine.js';
 import { denyIfVaultUserMismatch } from '../session-principal.js';
 import type { McpPaymentSession } from '../session.js';
 
@@ -18,7 +22,7 @@ export async function handlePreviewPayment(
 ): Promise<Record<string, unknown>> {
   let meta;
   try {
-    meta = session.vault.getSafeHandle(input.delegationId);
+    meta = session.vault.getMeta(input.delegationId);
   } catch {
     return {
       status: 'error',
@@ -30,6 +34,15 @@ export async function handlePreviewPayment(
   const vaultDenied = denyIfVaultUserMismatch(session, meta.userId);
   if (vaultDenied) return vaultDenied;
 
+  const policy = session.getDelegationPolicy(input.delegationId);
+  if (!policy) {
+    return {
+      status: 'error',
+      code: 'delegation_not_found',
+      message: 'Link wallet first (link_wallet).',
+    };
+  }
+
   const merchantId = input.merchantId ?? session.config.defaultMerchantId;
   const intentInput = {
     intentId: `pi_${randomUUID().replace(/-/g, '').slice(0, 16)}`,
@@ -39,6 +52,15 @@ export async function handlePreviewPayment(
     rail: (input.rail ?? PAYMENT_RAIL.CARD) as (typeof PAYMENT_RAIL)[keyof typeof PAYMENT_RAIL],
     railClass: RAIL_CLASS.B,
   };
+
+  const policyDecision = evaluatePreviewPaymentPolicy({
+    policy,
+    delegation: meta,
+    intent: intentInput,
+  });
+  if (!policyDecision.allowed) {
+    return policyDeniedToolPayload(policyDecision);
+  }
 
   const digestHex = computeIntentDigest(intentInput);
   const paymentIntent = buildPaymentIntentRecord(intentInput);
@@ -69,7 +91,7 @@ export async function handlePreviewPayment(
       digestPreview: `${digestHex.slice(0, 8)}…`,
     },
     policyNote:
-      'No capability token is issued until confirm_payment. User must approve this preview before charging.',
+      'Server policy passed. No capability token is issued until confirm_payment.',
   };
 
   assertSafeForLlmContext(safe);

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import test from 'node:test';
+import { buildPolicyFromEnv } from '../dist/policy/defaults.js';
 import { McpPaymentSession } from '../dist/session.js';
 import { handleLinkWallet } from '../dist/tools/link-wallet.js';
 import { handlePreviewPayment } from '../dist/tools/preview-payment.js';
@@ -20,6 +21,7 @@ const baseConfig = {
   defaultMerchantId: 'merchant:example_com',
   oauthCallbackHost: '127.0.0.1',
   oauthCallbackPort: 8765,
+  policy: buildPolicyFromEnv({ defaultMerchantId: 'merchant:example_com' }),
 };
 
 test('link_wallet rejects userId that does not match session principal (F-01)', async () => {

@@ -1,3 +1,4 @@
+import { buildPolicyFromEnv } from './policy/defaults.js';
 import type { McpPaymentConfig } from './types.js';
 
 function env(name: string, fallback?: string): string {
@@ -17,6 +18,7 @@ export function loadConfigFromEnv(): McpPaymentConfig {
   const walletBaseUrl = envOptional('DPP_WALLET_BASE_URL', 'http://127.0.0.1:3350');
   const merchantBaseUrl = envOptional('DPP_MERCHANT_BASE_URL', 'http://127.0.0.1:3340');
   const walletIssuer = envOptional('DPP_WALLET_ISSUER', `${walletBaseUrl.replace(/\/$/, '')}/issuer`);
+  const defaultMerchantId = envOptional('DPP_DEFAULT_MERCHANT_ID', 'merchant:example_com');
 
   return {
     walletBaseUrl: walletBaseUrl.replace(/\/$/, ''),
@@ -33,8 +35,16 @@ export function loadConfigFromEnv(): McpPaymentConfig {
     },
     vaultMasterKey: env('DPP_VAULT_MASTER_KEY'),
     sessionUserId: env('DPP_SESSION_USER_ID'),
-    defaultMerchantId: envOptional('DPP_DEFAULT_MERCHANT_ID', 'merchant:example_com'),
+    defaultMerchantId,
     oauthCallbackHost: envOptional('DPP_OAUTH_CALLBACK_HOST', '127.0.0.1'),
     oauthCallbackPort: Number(envOptional('DPP_OAUTH_CALLBACK_PORT', '8765')),
+    policy: buildPolicyFromEnv({
+      defaultMerchantId,
+      maxAmountValue: process.env.DPP_POLICY_MAX_AMOUNT,
+      maxAmountCurrency: process.env.DPP_POLICY_CURRENCY,
+      merchantAllowlist: process.env.DPP_POLICY_MERCHANT_ALLOWLIST,
+      paymentMethods: process.env.DPP_POLICY_PAYMENT_METHODS,
+      previewMaxAgeSeconds: process.env.DPP_POLICY_PREVIEW_MAX_AGE_SECONDS,
+    }),
   };
 }
