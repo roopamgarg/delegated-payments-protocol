@@ -155,7 +155,7 @@ async function main() {
       sessionUserId: DEMO_USER_ID,
       defaultMerchantId: 'merchant:example_com',
       policy: {
-        maxAmount: { value: '25.00', currency: 'USD' },
+        maxAmount: { value: '25.00', currency: 'INR' },
         merchantAllowlist: ['merchant:example_com'],
         paymentMethods: ['card'],
         previewMaxAgeSeconds: 300,
@@ -170,7 +170,7 @@ async function main() {
     const preview = await handlePreviewPayment(session, {
       delegationId,
       amountValue: '10.00',
-      currency: 'USD',
+      currency: 'INR',
     });
     if (preview.status !== 'preview_ready' || !preview.previewId) {
       throw new Error(`preview_payment failed: ${JSON.stringify(preview)}`);
