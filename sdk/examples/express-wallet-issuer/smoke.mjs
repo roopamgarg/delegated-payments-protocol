@@ -6,8 +6,13 @@ import { createHash, randomBytes } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 
-const PORT = 3352;
-const base = `http://127.0.0.1:${PORT}`;
+const PORT = Number(process.env.DPP_SMOKE_PORT ?? process.env.PORT ?? 3352);
+const smokeOrigin = (process.env.DPP_SMOKE_ORIGIN ?? `http://127.0.0.1:${PORT}`).replace(/\/$/, '');
+const base = smokeOrigin;
+const demoRedirectUri =
+  process.env.DPP_SMOKE_REDIRECT_URI ?? `${smokeOrigin}/demo/oauth/callback`;
+const smokeIssuer =
+  process.env.DPP_ISSUER ?? `${smokeOrigin.replace(/^http:/i, 'https:')}/issuer`;
 
 function pkcePair() {
   const codeVerifier = randomBytes(32).toString('base64url');
@@ -19,7 +24,7 @@ const child = spawn('node', ['server.mjs'], {
   env: {
     ...process.env,
     PORT: String(PORT),
-    DPP_ISSUER: `https://127.0.0.1:${PORT}/issuer`,
+    DPP_ISSUER: smokeIssuer,
     DPP_DEMO_AUTO_CONSENT: '1',
   },
   stdio: ['ignore', 'pipe', 'pipe'],
@@ -50,7 +55,7 @@ try {
     body: JSON.stringify({
       sub: 'did:key:z6MkSmokeUnauthAgent',
       displayName: 'Smoke unauth',
-      redirectUris: [`http://127.0.0.1:${PORT}/demo/oauth/callback`],
+      redirectUris: [demoRedirectUri],
     }),
   });
   if (unauthRegister.status !== 401) {
@@ -92,7 +97,7 @@ try {
   const authorizeUrl = new URL(`${base}/oauth/authorize`);
   authorizeUrl.searchParams.set('response_type', 'code');
   authorizeUrl.searchParams.set('client_id', 'demo-agent-client');
-  authorizeUrl.searchParams.set('redirect_uri', `http://127.0.0.1:${PORT}/demo/oauth/callback`);
+  authorizeUrl.searchParams.set('redirect_uri', demoRedirectUri);
   authorizeUrl.searchParams.set('scope', 'dpp:delegation:read dpp:intent:write');
   authorizeUrl.searchParams.set('state', 'smoke-state');
   authorizeUrl.searchParams.set('code_challenge', codeChallenge);
@@ -111,7 +116,7 @@ try {
     body: new URLSearchParams({
       grant_type: 'authorization_code',
       code,
-      redirect_uri: `http://127.0.0.1:${PORT}/demo/oauth/callback`,
+      redirect_uri: demoRedirectUri,
       client_id: 'demo-agent-client',
       code_verifier: codeVerifier,
     }),

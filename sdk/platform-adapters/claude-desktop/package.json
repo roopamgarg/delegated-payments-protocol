@@ -1,0 +1,38 @@
+{
+  "name": "dpp-claude-desktop-mcp",
+  "version": "0.1.0-alpha.0",
+  "description": "Claude Desktop distribution package for the DPP reference MCP payment server (plan §8.13).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "dpp-claude-desktop-mcp": "bin/dpp-claude-desktop-mcp.js"
+  },
+  "files": [
+    "bin",
+    "claude_desktop_config.example.json",
+    ".env.example",
+    "README.md"
+  ],
+  "scripts": {
+    "print-config": "node scripts/print-config.mjs",
+    "prepack": "node scripts/print-config.mjs >/dev/null"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dpp-mcp-payment-tool": "file:../../mcp-payment-tool"
+  },
+  "keywords": [
+    "dpp",
+    "mcp",
+    "claude-desktop",
+    "anthropic",
+    "delegated-payments"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roopamgarg/delegated-payments-protocol.git",
+    "directory": "sdk/platform-adapters/claude-desktop"
+  }
+}

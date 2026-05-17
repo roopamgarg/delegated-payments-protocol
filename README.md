@@ -36,6 +36,8 @@ delegated-payments-protocol/
 ├── sdk/
 │   ├── merchant-sdk/         # Merchant verification SDK
 │   ├── wallet-sdk/           # Wallet issuer SDK (scaffold)
+│   ├── mcp-payment-tool/     # Reference MCP server (§8.8)
+│   ├── platform-adapters/    # Claude Desktop, OpenAI Actions
 │   └── examples/             # Integration examples
 └── .github/                  # CI, issue and PR templates
 ```
@@ -65,6 +67,8 @@ delegated-payments-protocol/
 | Reference Stripe example | [sdk/examples/stripe-delegated-payment/](sdk/examples/stripe-delegated-payment/) |
 | Express merchant example | [sdk/examples/express-merchant/](sdk/examples/express-merchant/) |
 | Gemini payment adapter (function calling) | [sdk/platform-adapters/gemini/](sdk/platform-adapters/gemini/) |
+| Reference MCP payment tool | [sdk/mcp-payment-tool/](sdk/mcp-payment-tool/) |
+| Claude Desktop MCP adapter | [sdk/platform-adapters/claude-desktop/](sdk/platform-adapters/claude-desktop/) — [setup](docs/integration-guides/claude-desktop-mcp.md) |
 
 ## Contributing
 
