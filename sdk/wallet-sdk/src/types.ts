@@ -5,6 +5,7 @@ import {
   PAYMENT_RAIL,
   RAIL_CLASS,
 } from './constants.js';
+import type { KmsEs256Signer } from './crypto/kms-signer.js';
 
 export type CapabilityClaimsInput = {
   readonly sub: string;
@@ -90,12 +91,31 @@ export type OAuthTokenResponse = {
 
 export type SigningKeyMaterial =
   | { readonly type: 'local'; readonly privateJwk: JsonWebKey; readonly kid: string }
-  | { readonly type: 'kms'; readonly keyId: string; readonly kid: string };
+  | {
+      readonly type: 'kms';
+      readonly keyId: string;
+      readonly kid: string;
+      /** Cached from KMS GetPublicKey — never store private key material. */
+      readonly publicJwk: JsonWebKey;
+      /** Optional injected client for AWS KMS (production) or tests. */
+      readonly kmsClient?: unknown;
+    };
+
+export type KeyRotationConfig = {
+  /** Seconds to keep retired public keys in JWKS (default 86400, min 2× max capability TTL). */
+  readonly retentionSeconds?: number;
+};
 
 export type DPPWalletIssuerConfig = {
   readonly issuer: string;
   readonly signingKey: SigningKeyMaterial;
   readonly defaultCapabilityTtlSeconds?: number;
+  /**
+   * Injected KMS signer for `signingKey.type === 'kms'`.
+   * When omitted, the SDK uses `@aws-sdk/client-kms` with optional `signingKey.kmsClient`.
+   */
+  readonly kmsSigner?: KmsEs256Signer;
+  readonly keyRotation?: KeyRotationConfig;
   readonly oauth?: {
     readonly authorizationServerMetadataUrl?: string;
     readonly clientRegistration?: 'static' | 'dynamic';

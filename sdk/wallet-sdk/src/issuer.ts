@@ -21,20 +21,31 @@ import {
 import { createAuthorizationUrl, exchangeCode, revokeDelegation } from './oauth.js';
 import { registerAgent, revokeAgent } from './agent-registry.js';
 import { exportJwks, rotateKeys } from './crypto/jwks.js';
+import { SigningKeyRing } from './crypto/key-ring.js';
 import { DPP_ERROR_CODE } from './constants.js';
 import { DPPError } from './errors.js';
+import type { SigningKeyMaterial } from './types.js';
+import type { KmsEs256Signer } from './crypto/kms-signer.js';
 
 export type { DPPWalletIssuerConfig };
 
 /**
  * Root wallet issuer client — signs capabilities, orchestrates intents, and exposes OAuth helpers.
- * Alpha: OAuth/agent registry (AGE-38); capability, intent, and JWKS helpers remain scaffolded in AGE-36/37.
  */
 export class DPPWalletIssuer {
   readonly config: DPPWalletIssuerConfig;
+  readonly signingKeyRing: SigningKeyRing;
+  private kmsSigner?: KmsEs256Signer;
 
   constructor(config: DPPWalletIssuerConfig) {
     this.config = config;
+    this.kmsSigner = config.kmsSigner;
+    this.signingKeyRing = new SigningKeyRing(config.signingKey, config.keyRotation);
+  }
+
+  /** Resolved KMS signer for the active key (config injection or post-rotation update). */
+  getActiveKmsSigner(): KmsEs256Signer | undefined {
+    return this.kmsSigner;
   }
 
   issueCapability(input: CapabilityClaimsInput): Promise<IssueCapabilityResult> {
@@ -85,8 +96,14 @@ export class DPPWalletIssuer {
     return exportJwks(this);
   }
 
-  rotateKeys(): Promise<{ keys: ReadonlyArray<JsonWebKey> }> {
-    return rotateKeys(this);
+  rotateKeys(
+    nextSigningKey: SigningKeyMaterial,
+    kmsSigner?: KmsEs256Signer,
+  ): Promise<{ keys: ReadonlyArray<JsonWebKey> }> {
+    if (kmsSigner) {
+      this.kmsSigner = kmsSigner;
+    }
+    return rotateKeys(this, nextSigningKey);
   }
 }
 

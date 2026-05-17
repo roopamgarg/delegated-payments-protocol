@@ -19,8 +19,14 @@ import { createWalletIssuer } from 'dpp-wallet-sdk';
 
 const wallet = createWalletIssuer({
   issuer: 'https://wallet.example/issuer',
-  signingKey: { type: 'kms', keyId: 'alias/dpp-signing', kid: '2026-05' },
+  signingKey: {
+    type: 'kms',
+    keyId: 'alias/dpp-signing',
+    kid: '2026-05',
+    publicJwk: { kty: 'EC', crv: 'P-256', x: '...', y: '...', alg: 'ES256', use: 'sig' },
+  },
   defaultCapabilityTtlSeconds: 600,
+  // Production: inject kmsSigner for your KMS/HSM (AWS helper is optional — see docs/operations/wallet-kms-signing.md)
 });
 
 // Alpha scaffold — implementations in AGE-36–AGE-38:
