@@ -12,6 +12,8 @@ import { cancelDemoIntent, getDemoIntent, submitDemoIntent } from './demo-intent
 const PORT = Number(process.env.PORT ?? 3350);
 const ISSUER = process.env.DPP_ISSUER ?? `https://127.0.0.1:${PORT}/issuer`;
 const DEMO_USER_ID = process.env.DPP_DEMO_USER_ID ?? 'user_demo_01';
+const OPERATOR_TOKEN = process.env.DPP_OPERATOR_TOKEN ?? 'dev-operator-token';
+const AGENT_REGISTRATION_ENABLED = process.env.DPP_AGENT_REGISTRATION !== '0';
 
 let wallet;
 let registeredAgent;
@@ -31,6 +33,16 @@ async function bootstrap() {
   });
 
   registeredAgent = await wallet.registerAgent(demoAgentProfile(PORT));
+}
+
+function requireOperator(req, res) {
+  const auth = req.headers.authorization ?? '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  if (token !== OPERATOR_TOKEN) {
+    res.status(401).json({ error: 'unauthorized', message: 'Operator Bearer token required' });
+    return false;
+  }
+  return true;
 }
 
 function sendDppError(res, err) {
@@ -223,6 +235,11 @@ app.post('/oauth/revoke', async (req, res) => {
 });
 
 app.post('/v1/agents', async (req, res) => {
+  if (!AGENT_REGISTRATION_ENABLED) {
+    res.status(404).json({ error: 'not_found', message: 'Agent registration is disabled' });
+    return;
+  }
+  if (!requireOperator(req, res)) return;
   try {
     const profile = await wallet.registerAgent(req.body);
     res.status(201).json({
