@@ -6,7 +6,9 @@
   "description": "Express reference server for dpp-merchant-sdk",
   "scripts": {
     "start": "node server.mjs",
-    "smoke": "node smoke.mjs"
+    "sandbox": "node sandbox.mjs",
+    "smoke": "node smoke.mjs",
+    "test:guard": "node stripe-key-guard.test.mjs"
   },
   "engines": {
     "node": ">=20"

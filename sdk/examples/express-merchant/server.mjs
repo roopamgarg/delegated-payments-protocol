@@ -1,4 +1,6 @@
 import express from 'express';
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
 import {
   createMerchant,
   generateTestKeyPair,
@@ -7,9 +9,14 @@ import {
 } from 'dpp-merchant-sdk';
 import { ISSUER, sampleCapabilityClaims, samplePaymentIntent } from './fixtures.mjs';
 import { createMockStripe } from './mock-stripe.mjs';
+import { loadEnvLocal, resolveStripePspMode } from './stripe-key-guard.mjs';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+loadEnvLocal(__dirname);
 
 const PORT = Number(process.env.PORT ?? 3340);
-const useLiveStripe = Boolean(process.env.STRIPE_SECRET_KEY);
+const HOST = process.env.DPP_BIND_HOST ?? '127.0.0.1';
+const { mode: pspMode, useStripe } = resolveStripePspMode(process.env.STRIPE_SECRET_KEY);
 
 let testKeys;
 let jwks;
@@ -23,7 +30,7 @@ async function bootstrap() {
 
   const mockMode = process.env.DPP_MOCK_STRIPE_MODE ?? 'succeeded';
   const stripe =
-    useLiveStripe ? undefined : createMockStripe(mockMode === 'requires_action' ? 'requires_action' : 'succeeded');
+    useStripe ? undefined : createMockStripe(mockMode === 'requires_action' ? 'requires_action' : 'succeeded');
 
   dpp = createMerchant({
     psp: 'stripe',
@@ -46,7 +53,7 @@ app.use(express.json());
 app.get('/health', (_req, res) => {
   res.json({
     ok: true,
-    pspMode: useLiveStripe ? 'stripe_live' : 'stripe_mock',
+    pspMode,
   });
 });
 
@@ -138,7 +145,9 @@ function sendDppError(res, err) {
 }
 
 await bootstrap();
-app.listen(PORT, () => {
-  console.log(`DPP express-merchant demo listening on http://127.0.0.1:${PORT}`);
-  console.log(`PSP mode: ${useLiveStripe ? 'live Stripe' : 'mock Stripe'}`);
+app.listen(PORT, HOST, () => {
+  console.log(`DPP express-merchant demo listening on http://${HOST}:${PORT}`);
+  const pspLabel =
+    pspMode === 'stripe_test' ? 'Stripe Test Mode' : 'in-memory mock Stripe';
+  console.log(`PSP mode: ${pspLabel} (${pspMode})`);
 });
