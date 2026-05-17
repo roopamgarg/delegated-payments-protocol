@@ -41,7 +41,7 @@ npm run smoke
 | `GET` | `/oauth/authorize` | PKCE authorization (HTML consent or auto-redirect) |
 | `POST` | `/oauth/token` | Authorization code exchange |
 | `POST` | `/oauth/revoke` | Demo delegation revoke |
-| `POST` | `/v1/agents` | Register agent (`registerAgent`) |
+| `POST` | `/v1/agents` | Register agent (`registerAgent`; requires `Authorization: Bearer` operator token) |
 | `POST` | `/v1/intents` | Submit intent + capability (demo in-memory FSM) |
 | `GET` | `/v1/intents/:intentId` | Poll intent status |
 | `POST` | `/v1/intents/:intentId/cancel` | Cancel before settlement |
@@ -67,11 +67,15 @@ curl -s -X POST http://127.0.0.1:3350/v1/intents \
 |----------|---------|
 | `PORT` | Listen port (default `3350`) |
 | `DPP_ISSUER` | HTTPS issuer URL for JWT `iss` (default `https://127.0.0.1:{PORT}/issuer`) |
+| `DPP_OPERATOR_TOKEN` | Bearer token for `POST /v1/agents` (default `dev-operator-token`; set a strong secret in prod) |
+| `DPP_AGENT_REGISTRATION` | `0` = disable `POST /v1/agents` (404; use for production when agents are provisioned out-of-band) |
 | `DPP_DEMO_USER_ID` | Synthetic user id for demo OAuth consent |
 | `DPP_DEMO_AUTO_CONSENT` | `1` = skip HTML consent on `/oauth/authorize` |
 
 ## Production notes
 
+- Set `DPP_AGENT_REGISTRATION=0` and provision agents via operator tooling (not public HTTP).
+- Require a strong `DPP_OPERATOR_TOKEN` (or mTLS at the edge) if registration HTTP remains enabled.
 - Remove `/demo/*` routes in production; use real consent UI and vault storage for tokens.
 - Intent routes use an **in-memory demo store** until `dpp-wallet-sdk` intent FSM is wired (AGE-37 package implementation).
 - Use KMS signing (`AGE-50`); never commit private keys.

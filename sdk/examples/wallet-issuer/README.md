@@ -32,4 +32,4 @@ Point merchant `issuerAllowlist` at this service’s `WALLET_ISSUER` and load JW
 
 ## Security notes
 
-Demo only: in-memory stores, single demo user, operator token for agent registration. Do not use in production without persistence, TLS, and real authentication.
+Demo only: in-memory stores, single demo user. `POST /v1/agents` requires `Authorization: Bearer` with `DPP_OPERATOR_TOKEN` (see `.env.example`). Set `DPP_AGENT_REGISTRATION=0` in production to disable public registration. Do not use in production without persistence, TLS, and real authentication.
