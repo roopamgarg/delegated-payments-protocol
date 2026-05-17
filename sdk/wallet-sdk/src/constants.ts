@@ -1,0 +1,79 @@
+/** DPP protocol version supported by this SDK. */
+export const DPP_VERSION = '0.1' as const;
+
+export const ARTIFACT_TYPE = {
+  CAPABILITY: 'capability',
+  PAYMENT_INTENT: 'payment_intent',
+  MANDATE: 'mandate',
+} as const;
+
+/** Payment intent states per docs/protocol/verification-flows.md §4. */
+export const INTENT_STATE = {
+  CREATED: 'created',
+  VALIDATING: 'validating',
+  REJECTED: 'rejected',
+  EXECUTING: 'executing',
+  PENDING_USER_ACTION: 'pending_user_action',
+  SUCCEEDED: 'succeeded',
+  FAILED: 'failed',
+  EXPIRED: 'expired',
+} as const;
+
+export type IntentState = (typeof INTENT_STATE)[keyof typeof INTENT_STATE];
+
+export const INTENT_EVENT = {
+  SUBMIT: 'submit',
+  VALIDATION_FAILED: 'validation_failed',
+  VALIDATION_PASSED: 'validation_passed',
+  RAIL_ERROR: 'rail_error',
+  RAIL_REQUIRES_ACTION: 'rail_requires_action',
+  RAIL_SUCCEEDED: 'rail_succeeded',
+  RAIL_FAILED: 'rail_failed',
+  USER_COMPLETED: 'user_completed',
+  USER_DENIED: 'user_denied',
+  TTL_EXPIRED: 'ttl_expired',
+} as const;
+
+export type IntentEvent = (typeof INTENT_EVENT)[keyof typeof INTENT_EVENT];
+
+export const PAYMENT_RAIL = {
+  UPI: 'upi',
+  CARD: 'card',
+  WALLET_BALANCE: 'wallet_balance',
+} as const;
+
+export const RAIL_CLASS = {
+  A: 'A',
+  B: 'B',
+  C: 'C',
+} as const;
+
+export const DIGEST_ALG = {
+  SHA256: 'sha256',
+} as const;
+
+export const DPP_OAUTH_SCOPE = {
+  DELEGATION_READ: 'dpp:delegation:read',
+  DELEGATION_ISSUE: 'dpp:delegation:issue',
+  INTENT_READ: 'dpp:intent:read',
+  INTENT_WRITE: 'dpp:intent:write',
+  RAIL_READ: 'dpp:rail:read',
+} as const;
+
+/** `Error.name` for {@link DPPError}. */
+export const DPP_ERROR_CLASS_NAME = 'DPPError' as const;
+
+export const DPP_ERROR_CODE = {
+  NOT_IMPLEMENTED: 'not_implemented',
+  INVALID_CONFIG: 'invalid_config',
+  INVALID_TOKEN: 'invalid_token',
+  INVALID_SIGNATURE: 'invalid_signature',
+  OAUTH_ERROR: 'oauth_error',
+  AGENT_NOT_REGISTERED: 'agent_not_registered',
+  DELEGATION_REVOKED: 'delegation_revoked',
+  INTENT_NOT_FOUND: 'intent_not_found',
+  INVALID_STATE_TRANSITION: 'invalid_state_transition',
+  FORBIDDEN_CLAIM: 'forbidden_claim',
+} as const;
+
+export type DPPErrorCode = (typeof DPP_ERROR_CODE)[keyof typeof DPP_ERROR_CODE];
