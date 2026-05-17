@@ -1,0 +1,16 @@
+{
+  "name": "@dpp/e2e-delegated-payment",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "E2E harness: MCP payment tool → wallet-issuer → express-merchant",
+  "scripts": {
+    "e2e": "node delegated-payment.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dpp-mcp-payment-tool": "file:../mcp-payment-tool"
+  }
+}
