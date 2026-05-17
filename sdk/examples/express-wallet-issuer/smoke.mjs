@@ -44,6 +44,19 @@ try {
   const health = await fetch(`${base}/health`).then((r) => r.json());
   if (!health.ok) throw new Error('health check failed');
 
+  const unauthRegister = await fetch(`${base}/v1/agents`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      sub: 'did:key:z6MkSmokeUnauthAgent',
+      displayName: 'Smoke unauth',
+      redirectUris: [`http://127.0.0.1:${PORT}/demo/oauth/callback`],
+    }),
+  });
+  if (unauthRegister.status !== 401) {
+    throw new Error(`POST /v1/agents without token expected 401, got ${unauthRegister.status}`);
+  }
+
   const metadata = await fetch(`${base}/.well-known/oauth-authorization-server`).then((r) =>
     r.json(),
   );
