@@ -40,7 +40,8 @@ function startServer() {
   console.log('');
   console.log('────────────────────────────────────────────');
   console.log('  DPP sandbox harness (Stripe Test Mode)');
-  console.log(`  URL:      ${url}`);
+  console.log(`  API:      ${url}`);
+  console.log(`  Console:  ${url}/sandbox`);
   console.log(`  PSP mode: ${pspMode}`);
   console.log('  SANDBOX ONLY — bind 127.0.0.1, no live keys');
   console.log('────────────────────────────────────────────');
