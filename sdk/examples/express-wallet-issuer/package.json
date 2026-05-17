@@ -1,0 +1,19 @@
+{
+  "name": "@dpp/example-express-wallet-issuer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Express reference server for dpp-wallet-sdk (OAuth + intents)",
+  "scripts": {
+    "start": "node server.mjs",
+    "smoke": "node smoke.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dpp-wallet-sdk": "file:../../wallet-sdk",
+    "express": "^5.1.0",
+    "jose": "^6.0.11"
+  }
+}
