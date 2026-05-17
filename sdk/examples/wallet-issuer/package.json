@@ -1,0 +1,19 @@
+{
+  "name": "@dpp/example-wallet-issuer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Reference wallet service MVP using dpp-wallet-sdk (OAuth consent, accounts, payment methods)",
+  "scripts": {
+    "start": "node server.mjs",
+    "smoke": "node smoke.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dpp-wallet-sdk": "file:../../wallet-sdk",
+    "express": "^5.1.0",
+    "jose": "^6.0.11"
+  }
+}
