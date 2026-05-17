@@ -4,7 +4,8 @@ import type { DPPWalletIssuer } from './issuer.js';
 import type { CapabilityClaimsInput, IssueCapabilityResult } from './types.js';
 import { ARTIFACT_TYPE, DPP_ERROR_CODE, DPP_VERSION } from './constants.js';
 import { DPPError } from './errors.js';
-import { importSigningKey } from './crypto/keys.js';
+import { importSigningKey, resolveJoseEs256Signer } from './crypto/keys.js';
+import { signCapabilityJwt } from './crypto/compact-sign.js';
 
 const DEFAULT_CAPABILITY_TTL_SECONDS = 600;
 const MAX_CAPABILITY_TTL_SECONDS = 900;
@@ -94,9 +95,18 @@ export async function issueCapability(
   const nonce = createNonce();
   const jti = randomUUID();
   const activeKey = issuer.signingKeyRing.getActive();
-  const { key, kid } = await importSigningKey(activeKey);
   const payload = buildCapabilityPayload(issuer, input, now, expiresAt, nonce, jti);
-  const compactJws = await buildCapabilitySignJwt(payload, kid).sign(key);
+  const protectedHeader = { alg: ES256_ALG, kid: activeKey.kid };
+
+  let compactJws: string;
+  if (activeKey.type === 'local') {
+    compactJws = await buildCapabilitySignJwt(payload, activeKey.kid).sign(
+      (await importSigningKey(activeKey)).key,
+    );
+  } else {
+    const signer = await resolveJoseEs256Signer(activeKey, issuer.getActiveKmsSigner());
+    compactJws = await signCapabilityJwt(protectedHeader, payload, signer);
+  }
 
   return { compactJws, jti, expiresAt };
 }
