@@ -54,6 +54,7 @@ delegated-payments-protocol/
 | Capability token schema | v0.1 — [specs/schemas/capability-token.schema.json](specs/schemas/capability-token.schema.json) |
 | Payment intent + mandate schemas | v0.1 — [specs/schemas/payment-intent.schema.json](specs/schemas/payment-intent.schema.json), [specs/schemas/mandate.schema.json](specs/schemas/mandate.schema.json) |
 | Agent identity + payment intent specs | Draft — [docs/protocol/agent-identity.md](docs/protocol/agent-identity.md), [docs/protocol/payment-intents.md](docs/protocol/payment-intents.md) |
+| Wallet OAuth linking profile | Draft — [docs/protocol/wallet-oauth-linking.md](docs/protocol/wallet-oauth-linking.md), [specs/openapi/wallet-oauth.yaml](specs/openapi/wallet-oauth.yaml) |
 | Verification & escalation | Draft — [docs/protocol/verification-flows.md](docs/protocol/verification-flows.md) |
 | Threat model | Draft — [docs/threat-model/v0.1.md](docs/threat-model/v0.1.md) |
 | UPI integration guide | Draft — [docs/integration-guides/upi.md](docs/integration-guides/upi.md) |

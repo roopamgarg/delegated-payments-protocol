@@ -3,8 +3,9 @@ info:
   title: DPP Merchant Verification API (v0.1 sketch)
   version: 0.1.0
   description: >
-    Informative OpenAPI surface for wallet services polling intent status and for merchants
-    correlating settlements. Normative protocol text lives in docs/protocol/verification-flows.md.
+    Informative OpenAPI surface for wallet payment intents and mandate reads.
+    OAuth linking, agent registration, and delegation APIs are in wallet-oauth.yaml.
+    Normative protocol text: docs/protocol/verification-flows.md, docs/protocol/wallet-oauth-linking.md.
 servers:
   - url: https://wallet.example.com
 paths:

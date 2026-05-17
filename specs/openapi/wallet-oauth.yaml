@@ -1,0 +1,564 @@
+openapi: 3.0.3
+info:
+  title: DPP Wallet OAuth & Delegation API (v0.1 sketch)
+  version: 0.1.0
+  description: >
+    Normative HTTP surface for wallet↔agent linking per docs/protocol/wallet-oauth-linking.md.
+    Payment intent endpoints remain in merchant-verification.yaml. This file covers OAuth,
+    agent registration, and delegation lifecycle.
+servers:
+  - url: https://wallet.example.com
+tags:
+  - name: discovery
+  - name: oauth
+  - name: agents
+  - name: delegations
+paths:
+  /.well-known/oauth-authorization-server:
+    get:
+      tags: [discovery]
+      summary: OAuth 2.0 authorization server metadata (RFC 8414)
+      operationId: getAuthorizationServerMetadata
+      responses:
+        '200':
+          description: Authorization server metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthAuthorizationServerMetadata'
+
+  /oauth/authorize:
+    get:
+      tags: [oauth]
+      summary: Start user consent and authorization code flow (PKCE required)
+      operationId: authorize
+      parameters:
+        - $ref: '#/components/parameters/responseType'
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/redirectUri'
+        - $ref: '#/components/parameters/scope'
+        - $ref: '#/components/parameters/state'
+        - $ref: '#/components/parameters/codeChallenge'
+        - $ref: '#/components/parameters/codeChallengeMethod'
+        - name: resource
+          in: query
+          schema:
+            type: string
+            format: uri
+          description: RFC 8707 resource indicator (wallet API origin)
+        - name: dpp_agent_sub
+          in: query
+          schema:
+            type: string
+          description: Agent identifier to bind (see agent-identity.md)
+      responses:
+        '302':
+          description: Redirect to redirect_uri with code or OAuth error
+        '400':
+          description: Invalid request
+
+  /oauth/token:
+    post:
+      tags: [oauth]
+      summary: Exchange authorization code or refresh token
+      operationId: token
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/AuthorizationCodeTokenRequest'
+                - $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: OAuth error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthError'
+
+  /oauth/revoke:
+    post:
+      tags: [oauth]
+      summary: Revoke access or refresh token (RFC 7009)
+      operationId: revokeToken
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RevocationRequest'
+      responses:
+        '200':
+          description: Revocation accepted (empty body)
+
+  /v1/agents:
+    post:
+      tags: [agents]
+      summary: Register agent platform OAuth client
+      operationId: registerAgent
+      security:
+        - walletOperatorAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRegistration'
+      responses:
+        '201':
+          description: Agent registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRegistrationResponse'
+        '409':
+          description: clientId or agentSub already exists
+
+  /v1/agents/{agentId}:
+    patch:
+      tags: [agents]
+      summary: Update agent metadata or JWKS
+      operationId: updateAgent
+      security:
+        - walletOperatorAuth: []
+      parameters:
+        - $ref: '#/components/parameters/agentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentUpdate'
+      responses:
+        '200':
+          description: Updated agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRegistrationResponse'
+
+  /v1/agents/{agentId}/disable:
+    post:
+      tags: [agents]
+      summary: Disable new authorizations for agent
+      operationId: disableAgent
+      security:
+        - walletOperatorAuth: []
+      parameters:
+        - $ref: '#/components/parameters/agentId'
+      responses:
+        '204':
+          description: Agent disabled
+
+  /v1/agents/{agentId}/revoke-all:
+    post:
+      tags: [agents]
+      summary: Revoke all user delegations for agent
+      operationId: revokeAllAgentDelegations
+      security:
+        - walletOperatorAuth: []
+      parameters:
+        - $ref: '#/components/parameters/agentId'
+      responses:
+        '202':
+          description: Revocation accepted
+
+  /v1/delegations/revoke:
+    post:
+      tags: [delegations]
+      summary: Revoke current or specified user↔agent delegation
+      operationId: revokeDelegation
+      security:
+        - delegationBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DelegationRevokeRequest'
+      responses:
+        '204':
+          description: Delegation revoked
+
+  /v1/delegations/{delegationId}:
+    get:
+      tags: [delegations]
+      summary: Read delegation status
+      operationId: getDelegation
+      security:
+        - delegationBearer: []
+      parameters:
+        - $ref: '#/components/parameters/delegationId'
+      responses:
+        '200':
+          description: Delegation record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Delegation'
+
+  /v1/delegations/{delegationId}/capabilities:
+    post:
+      tags: [delegations]
+      summary: Issue short-lived capability JWS for merchant verification
+      operationId: issueCapability
+      security:
+        - delegationBearer: []
+      parameters:
+        - $ref: '#/components/parameters/delegationId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CapabilityIssueRequest'
+      responses:
+        '201':
+          description: Capability issued (store in vault only — not for LLM)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapabilityIssueResponse'
+
+  /v1/users/me/rails:
+    get:
+      tags: [delegations]
+      summary: Rail catalog for linked user (agent read via delegation token)
+      operationId: getRailCatalog
+      security:
+        - delegationBearer: []
+      responses:
+        '200':
+          description: Allowed rails and classes for this delegation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RailCatalog'
+
+components:
+  securitySchemes:
+    delegationBearer:
+      type: http
+      scheme: bearer
+      description: OAuth access token from /oauth/token
+    walletOperatorAuth:
+      type: http
+      scheme: bearer
+      description: Wallet operator credential for agent registration
+
+  parameters:
+    responseType:
+      name: response_type
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [code]
+    clientId:
+      name: client_id
+      in: query
+      required: true
+      schema:
+        type: string
+    redirectUri:
+      name: redirect_uri
+      in: query
+      required: true
+      schema:
+        type: string
+        format: uri
+    scope:
+      name: scope
+      in: query
+      required: true
+      schema:
+        type: string
+        description: Space-delimited DPP scopes
+    state:
+      name: state
+      in: query
+      required: true
+      schema:
+        type: string
+        minLength: 8
+    codeChallenge:
+      name: code_challenge
+      in: query
+      required: true
+      schema:
+        type: string
+    codeChallengeMethod:
+      name: code_challenge_method
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [S256]
+    agentId:
+      name: agentId
+      in: path
+      required: true
+      schema:
+        type: string
+    delegationId:
+      name: delegationId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    OAuthAuthorizationServerMetadata:
+      type: object
+      required:
+        - issuer
+        - authorization_endpoint
+        - token_endpoint
+        - revocation_endpoint
+        - code_challenge_methods_supported
+        - grant_types_supported
+        - response_types_supported
+        - scopes_supported
+      properties:
+        issuer:
+          type: string
+          format: uri
+        authorization_endpoint:
+          type: string
+          format: uri
+        token_endpoint:
+          type: string
+          format: uri
+        revocation_endpoint:
+          type: string
+          format: uri
+        code_challenge_methods_supported:
+          type: array
+          items:
+            type: string
+        grant_types_supported:
+          type: array
+          items:
+            type: string
+        response_types_supported:
+          type: array
+          items:
+            type: string
+        scopes_supported:
+          type: array
+          items:
+            type: string
+
+    AuthorizationCodeTokenRequest:
+      type: object
+      required: [grant_type, code, redirect_uri, client_id, code_verifier]
+      properties:
+        grant_type:
+          type: string
+          enum: [authorization_code]
+        code:
+          type: string
+        redirect_uri:
+          type: string
+          format: uri
+        client_id:
+          type: string
+        code_verifier:
+          type: string
+        client_secret:
+          type: string
+          description: Confidential clients only
+
+    RefreshTokenRequest:
+      type: object
+      required: [grant_type, refresh_token, client_id]
+      properties:
+        grant_type:
+          type: string
+          enum: [refresh_token]
+        refresh_token:
+          type: string
+        client_id:
+          type: string
+        client_secret:
+          type: string
+
+    TokenResponse:
+      type: object
+      required: [access_token, token_type, expires_in, scope, dpp_delegation_id, dpp_agent_sub]
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in:
+          type: integer
+        refresh_token:
+          type: string
+        scope:
+          type: string
+        dpp_delegation_id:
+          type: string
+        dpp_agent_sub:
+          type: string
+          description: Agent subject bound to this delegation
+
+    OAuthError:
+      type: object
+      properties:
+        error:
+          type: string
+        error_description:
+          type: string
+
+    RevocationRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+        token_type_hint:
+          type: string
+          enum: [access_token, refresh_token]
+        client_id:
+          type: string
+        client_secret:
+          type: string
+
+    AgentRegistration:
+      type: object
+      required: [clientId, displayName, redirectUris, agentSub]
+      properties:
+        clientId:
+          type: string
+        displayName:
+          type: string
+        redirectUris:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            format: uri
+        agentSub:
+          type: string
+          description: did:key, SPIFFE ID, or HTTPS agent URI
+        publicKeys:
+          type: array
+          items:
+            type: object
+            description: JWK (RFC 7517)
+        tokenEndpointAuthMethod:
+          type: string
+          enum: [none, client_secret_post]
+          default: none
+
+    AgentUpdate:
+      type: object
+      properties:
+        displayName:
+          type: string
+        redirectUris:
+          type: array
+          items:
+            type: string
+            format: uri
+        publicKeys:
+          type: array
+          items:
+            type: object
+
+    AgentRegistrationResponse:
+      type: object
+      required: [agentId, clientId, agentSub, status]
+      properties:
+        agentId:
+          type: string
+        clientId:
+          type: string
+        agentSub:
+          type: string
+        status:
+          type: string
+          enum: [active, disabled]
+
+    DelegationRevokeRequest:
+      type: object
+      properties:
+        delegationId:
+          type: string
+          description: If omitted, revoke delegation of the bearer token
+
+    Delegation:
+      type: object
+      required: [delegationId, userId, agentSub, status, scopes, createdAt]
+      properties:
+        delegationId:
+          type: string
+        userId:
+          type: string
+        agentSub:
+          type: string
+        status:
+          type: string
+          enum: [active, revoked]
+        scopes:
+          type: array
+          items:
+            type: string
+        constraints:
+          type: object
+          description: Payment constraints snapshot at link time
+        createdAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+
+    CapabilityIssueRequest:
+      type: object
+      properties:
+        constraints:
+          type: object
+          description: Optional narrow-only overrides (see capability-token.schema.json)
+        aud:
+          type: array
+          items:
+            type: string
+
+    CapabilityIssueResponse:
+      type: object
+      required: [capabilityToken, expiresAt]
+      properties:
+        capabilityToken:
+          type: string
+          description: Compact JWS — MUST NOT be logged or sent to LLM
+        expiresAt:
+          type: integer
+          description: Unix seconds
+
+    RailCatalog:
+      type: object
+      required: [rails]
+      properties:
+        rails:
+          type: array
+          items:
+            type: object
+            required: [rail, railClass]
+            properties:
+              rail:
+                type: string
+                example: upi
+              railClass:
+                type: string
+                enum: [A, B, C, D]
+                description: See verification-flows.md §3
