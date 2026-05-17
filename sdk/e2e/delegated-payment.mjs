@@ -152,7 +152,14 @@ async function main() {
         scopes: ['dpp:delegation:read', 'dpp:delegation:issue'],
       },
       vaultMasterKey: randomBytes(32).toString('base64'),
+      sessionUserId: DEMO_USER_ID,
       defaultMerchantId: 'merchant:example_com',
+      policy: {
+        maxAmount: { value: '25.00', currency: 'INR' },
+        merchantAllowlist: ['merchant:example_com'],
+        paymentMethods: ['card'],
+        previewMaxAgeSeconds: 300,
+      },
       oauthCallbackHost: '127.0.0.1',
       oauthCallbackPort: 8765,
     };
@@ -163,7 +170,7 @@ async function main() {
     const preview = await handlePreviewPayment(session, {
       delegationId,
       amountValue: '10.00',
-      currency: 'USD',
+      currency: 'INR',
     });
     if (preview.status !== 'preview_ready' || !preview.previewId) {
       throw new Error(`preview_payment failed: ${JSON.stringify(preview)}`);
