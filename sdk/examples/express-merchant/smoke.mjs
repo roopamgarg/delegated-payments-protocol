@@ -37,6 +37,11 @@ try {
   const health = await fetch(`${base}/health`).then((r) => r.json());
   if (!health.ok) throw new Error('health check failed');
 
+  const sandboxPage = await fetch(`${base}/sandbox/`);
+  if (!sandboxPage.ok) throw new Error('sandbox UI not served');
+  const html = await sandboxPage.text();
+  if (!html.includes('DPP Sandbox Console')) throw new Error('sandbox HTML missing title');
+
   const mint = await fetch(`${base}/demo/capability`, { method: 'POST' }).then((r) => r.json());
 
   const pay = await fetch(`${base}/payments/delegate`, {

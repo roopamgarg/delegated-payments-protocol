@@ -1,6 +1,6 @@
 import express from 'express';
 import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import {
   createMerchant,
   generateTestKeyPair,
@@ -17,6 +17,9 @@ loadEnvLocal(__dirname);
 const PORT = Number(process.env.PORT ?? 3340);
 const HOST = process.env.DPP_BIND_HOST ?? '127.0.0.1';
 const { mode: pspMode, useStripe } = resolveStripePspMode(process.env.STRIPE_SECRET_KEY);
+const sandboxUiEnabled =
+  process.env.NODE_ENV !== 'production' && process.env.DPP_SANDBOX_UI !== '0';
+const sandboxDir = join(__dirname, 'public', 'sandbox');
 
 let testKeys;
 let jwks;
@@ -49,6 +52,17 @@ async function bootstrap() {
 
 const app = express();
 app.use(express.json());
+
+if (sandboxUiEnabled) {
+  app.use('/sandbox', express.static(sandboxDir, { index: 'index.html' }));
+} else {
+  app.get('/sandbox', (_req, res) => {
+    res.status(404).json({ error: 'sandbox_ui_disabled' });
+  });
+  app.get('/sandbox/*splat', (_req, res) => {
+    res.status(404).json({ error: 'sandbox_ui_disabled' });
+  });
+}
 
 app.get('/health', (_req, res) => {
   res.json({
@@ -150,4 +164,7 @@ app.listen(PORT, HOST, () => {
   const pspLabel =
     pspMode === 'stripe_test' ? 'Stripe Test Mode' : 'in-memory mock Stripe';
   console.log(`PSP mode: ${pspLabel} (${pspMode})`);
+  if (sandboxUiEnabled) {
+    console.log(`Sandbox console: http://${HOST}:${PORT}/sandbox`);
+  }
 });

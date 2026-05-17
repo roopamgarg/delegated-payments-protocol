@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DPP Sandbox Console</title>
+    <link rel="stylesheet" href="/sandbox/styles.css" />
+  </head>
+  <body>
+    <header class="banner" id="banner" hidden>
+      <strong id="banner-text">SANDBOX ONLY</strong>
+      <span class="banner-sub" id="banner-sub"></span>
+    </header>
+
+    <main class="layout">
+      <section class="panel" aria-labelledby="wallet-heading">
+        <h2 id="wallet-heading">Wallet / setup</h2>
+        <p class="hint">Mint a signed capability and payment intent for the demo merchant.</p>
+
+        <dl class="meta">
+          <div>
+            <dt>PSP mode</dt>
+            <dd id="psp-mode">—</dd>
+          </div>
+          <div>
+            <dt>Harness</dt>
+            <dd><code id="base-url">—</code></dd>
+          </div>
+        </dl>
+
+        <form id="intent-form" class="form">
+          <label>
+            Amount (USD)
+            <input type="text" name="amount" value="10.00" autocomplete="off" />
+          </label>
+          <label>
+            Merchant ID
+            <input type="text" name="merchantId" value="merchant:example_com" autocomplete="off" />
+          </label>
+          <button type="button" id="btn-mint" class="primary">Mint capability + intent</button>
+        </form>
+
+        <details class="json-block">
+          <summary>Capability token</summary>
+          <pre id="capability-preview" class="mono muted">Not minted yet</pre>
+        </details>
+        <details class="json-block">
+          <summary>Payment intent</summary>
+          <pre id="intent-preview" class="mono muted">Not minted yet</pre>
+        </details>
+      </section>
+
+      <section class="panel" aria-labelledby="agent-heading">
+        <h2 id="agent-heading">Agent</h2>
+        <p class="hint">Submit a delegated payment (verify + PSP charge).</p>
+
+        <div class="status-row">
+          <span class="label">Payment status</span>
+          <span id="payment-badge" class="badge badge-idle">idle</span>
+        </div>
+        <div class="status-row">
+          <span class="label">Delegation</span>
+          <span id="verdict-badge" class="badge badge-idle">—</span>
+        </div>
+
+        <button type="button" id="btn-delegate" class="primary" disabled>Submit payment</button>
+
+        <div id="escalation-panel" class="escalation" hidden>
+          <h3>User action required</h3>
+          <p id="escalation-copy">
+            Stripe returned <code>requires_action</code>. Complete 3DS on Stripe or your bank — this UI does not collect card data.
+          </p>
+          <p class="hint">
+            Stripe test cards:
+            <a href="https://docs.stripe.com/testing#regulatory-cards" target="_blank" rel="noopener noreferrer"
+              >3DS authentication</a
+            >
+            (e.g. <code>4000002500003155</code>).
+          </p>
+          <dl class="meta compact" id="escalation-meta"></dl>
+        </div>
+
+        <details class="json-block" open>
+          <summary>Last response</summary>
+          <pre id="delegate-response" class="mono muted">—</pre>
+        </details>
+      </section>
+
+      <section class="panel" aria-labelledby="merchant-heading">
+        <h2 id="merchant-heading">Merchant / audit</h2>
+        <p class="hint">Verify delegation only, or poll PSP status after a charge.</p>
+
+        <button type="button" id="btn-verify" class="secondary" disabled>Verify only</button>
+
+        <div class="poll-row">
+          <label>
+            PSP payment ID
+            <input type="text" id="poll-id" placeholder="pi_…" autocomplete="off" />
+          </label>
+          <button type="button" id="btn-poll" class="secondary" disabled>Poll status</button>
+        </div>
+
+        <details class="json-block">
+          <summary>Verify result</summary>
+          <pre id="verify-response" class="mono muted">—</pre>
+        </details>
+        <details class="json-block">
+          <summary>Status poll</summary>
+          <pre id="poll-response" class="mono muted">—</pre>
+        </details>
+        <p class="hint diagnostic" id="client-secret-hint" hidden>
+          <strong>Sandbox diagnostic:</strong> client secret shown in response JSON only — do not log or persist.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Delegated Payments Protocol · local harness only · bind <code>127.0.0.1</code></p>
+    </footer>
+
+    <script type="module" src="/sandbox/app.js"></script>
+  </body>
+</html>
