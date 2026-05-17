@@ -10,6 +10,7 @@ export type {
   PaymentIntentInput,
   PaymentIntentRecord,
   SigningKeyMaterial,
+  KeyRotationConfig,
 } from './types.js';
 
 export { DPPError, DPP_ERROR_CODE, type DPPErrorCode } from './errors.js';
