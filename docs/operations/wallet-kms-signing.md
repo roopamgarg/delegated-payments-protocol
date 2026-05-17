@@ -12,6 +12,43 @@ Operational guidance for `dpp-wallet-sdk` production deployments using cloud KMS
 | Rotation | `rotateKeys(nextSigningKey)` after provisioning the successor key |
 | Retention | Retired `kid` values stay in JWKS for `keyRotation.retentionSeconds` (default **86400s**, minimum **2×** max capability TTL = 1800s floor at 900s TTL) |
 
+## Provider portability (not AWS-only)
+
+Production signing is **not** tied to AWS. The SDK exposes a small, provider-agnostic `KmsEs256Signer` interface; your wallet service implements or injects it.
+
+| Path | When to use |
+|------|-------------|
+| `signingKey.type: 'local'` | Dev, CI, single-node tests only |
+| `config.kmsSigner` (injected) | **Any** KMS/HSM that can ES256-sign — GCP Cloud KMS, Azure Key Vault, HashiCorp Vault Transit, on-prem HSM, etc. |
+| `createAwsKmsEs256Signer()` | Optional convenience when you already run on AWS; requires peer dep `@aws-sdk/client-kms` |
+
+Injected signers support two shapes (pick what your backend offers):
+
+- **`signMessage(message)`** — signs the JWS signing input bytes (used by dev/test mocks).
+- **`signSha256Digest(digest)`** — signs a 32-byte SHA-256 digest (matches AWS KMS `ECDSA_SHA_256` with `MessageType: DIGEST`).
+
+Example (non-AWS) — wrap your HSM client:
+
+```typescript
+const wallet = createWalletIssuer({
+  issuer: 'https://wallet.example/issuer',
+  signingKey: {
+    type: 'kms',
+    keyId: 'vault:transit/keys/dpp-signing',
+    kid: '2026-05-primary',
+    publicJwk: cachedPublicJwkFromHsm,
+  },
+  kmsSigner: {
+    keyId: 'vault:transit/keys/dpp-signing',
+    async signSha256Digest(digest) {
+      return myHsmClient.signEs256Digest(digest); // DER or raw P-256 R||S
+    },
+  },
+});
+```
+
+v0.1 ships an AWS helper and reference ops runbook because that is a common deployment path; it is **not** a protocol or SDK requirement.
+
 ## AWS KMS setup (reference)
 
 1. Create an asymmetric `ECC_NIST_P256` signing key with `SIGN_VERIFY` usage.
