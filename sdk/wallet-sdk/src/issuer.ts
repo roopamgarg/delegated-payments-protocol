@@ -21,20 +21,23 @@ import {
 import { createAuthorizationUrl, exchangeCode, revokeDelegation } from './oauth.js';
 import { registerAgent, revokeAgent } from './agent-registry.js';
 import { exportJwks, rotateKeys } from './crypto/jwks.js';
+import { SigningKeyRing } from './crypto/key-ring.js';
 import { DPP_ERROR_CODE } from './constants.js';
 import { DPPError } from './errors.js';
+import type { SigningKeyMaterial } from './types.js';
 
 export type { DPPWalletIssuerConfig };
 
 /**
  * Root wallet issuer client — signs capabilities, orchestrates intents, and exposes OAuth helpers.
- * Alpha: OAuth/agent registry (AGE-38); capability, intent, and JWKS helpers remain scaffolded in AGE-36/37.
  */
 export class DPPWalletIssuer {
   readonly config: DPPWalletIssuerConfig;
+  readonly signingKeyRing: SigningKeyRing;
 
   constructor(config: DPPWalletIssuerConfig) {
     this.config = config;
+    this.signingKeyRing = new SigningKeyRing(config.signingKey, config.keyRotation);
   }
 
   issueCapability(input: CapabilityClaimsInput): Promise<IssueCapabilityResult> {
@@ -85,8 +88,8 @@ export class DPPWalletIssuer {
     return exportJwks(this);
   }
 
-  rotateKeys(): Promise<{ keys: ReadonlyArray<JsonWebKey> }> {
-    return rotateKeys(this);
+  rotateKeys(nextSigningKey: SigningKeyMaterial): Promise<{ keys: ReadonlyArray<JsonWebKey> }> {
+    return rotateKeys(this, nextSigningKey);
   }
 }
 

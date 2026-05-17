@@ -92,10 +92,16 @@ export type SigningKeyMaterial =
   | { readonly type: 'local'; readonly privateJwk: JsonWebKey; readonly kid: string }
   | { readonly type: 'kms'; readonly keyId: string; readonly kid: string };
 
+export type KeyRotationConfig = {
+  /** Seconds to keep retired public keys in JWKS (default 86400, min 2× max capability TTL). */
+  readonly retentionSeconds?: number;
+};
+
 export type DPPWalletIssuerConfig = {
   readonly issuer: string;
   readonly signingKey: SigningKeyMaterial;
   readonly defaultCapabilityTtlSeconds?: number;
+  readonly keyRotation?: KeyRotationConfig;
   readonly oauth?: {
     readonly authorizationServerMetadataUrl?: string;
     readonly clientRegistration?: 'static' | 'dynamic';
