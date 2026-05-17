@@ -1,0 +1,19 @@
+{
+  "comment": "Reference wiring checklist for GPT builder.",
+  "chatgpt_actions": {
+    "actions_api_secret": {
+      "env": "DPP_ACTIONS_API_KEY",
+      "header_preference": "Authorization: Bearer <key>"
+    },
+    "caller_identity_header": {
+      "name": "X-DPP-User-Id",
+      "alternate_demo_field": "userId JSON field on POST routes"
+    },
+    "wallet_oauth": {
+      "redirect_uri_env": "DPP_OAUTH_REDIRECT_URI",
+      "default_local_callback": "http://127.0.0.1:8765/oauth/callback",
+      "note": "Register redirect with your demo wallet issuer separately from ChatGPT."
+    },
+    "import_spec_url": "{DPP_ACTIONS_PUBLIC_URL}/openapi.yaml"
+  }
+}
