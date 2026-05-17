@@ -1,20 +1,20 @@
 import type { SigningKeyMaterial } from '../types.js';
 import { DPP_ERROR_CODE } from '../constants.js';
+
+const MAX_CAPABILITY_TTL_SECONDS = 900;
 import { DPPError } from '../errors.js';
 import { getPublicJwk } from './keys.js';
 
-const MAX_CAPABILITY_TTL_SECONDS = 900;
-
 export const DEFAULT_KEY_RETENTION_SECONDS = 86_400;
-
-export type KeyRotationConfig = {
-  readonly retentionSeconds?: number;
-};
 
 export type RetiredSigningKey = {
   readonly material: SigningKeyMaterial;
   readonly retiredAt: number;
   readonly expiresAt: number;
+};
+
+export type KeyRotationConfig = {
+  readonly retentionSeconds?: number;
 };
 
 export class SigningKeyRing {

@@ -3,6 +3,7 @@ export type {
   CapabilityClaimsInput,
   DPPWalletIssuerConfig,
   IssueCapabilityResult,
+  KeyRotationConfig,
   OAuthAuthorizationRequest,
   OAuthAuthorizationUrl,
   OAuthTokenExchangeInput,
@@ -10,8 +11,11 @@ export type {
   PaymentIntentInput,
   PaymentIntentRecord,
   SigningKeyMaterial,
-  KeyRotationConfig,
 } from './types.js';
+
+export type { KmsEs256Signer } from './crypto/kms-signer.js';
+export { createAwsKmsEs256Signer } from './crypto/kms-signer.js';
+export { DEFAULT_KEY_RETENTION_SECONDS } from './crypto/key-ring.js';
 
 export { DPPError, DPP_ERROR_CODE, type DPPErrorCode } from './errors.js';
 

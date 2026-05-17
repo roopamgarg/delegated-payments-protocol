@@ -77,7 +77,11 @@ type DPPWalletIssuerConfig = {
 
 type SigningKeyMaterial =
   | { type: 'local'; privateJwk: JsonWebKey; kid: string }
-  | { type: 'kms'; keyId: string; kid: string };
+  | { type: 'kms'; keyId: string; kid: string; publicJwk: JsonWebKey };
+
+type KeyRotationConfig = {
+  retentionSeconds?: number;  // default 86400
+};
 ```
 
 | Field | Requirement |
@@ -225,7 +229,7 @@ Agent `sub` format: [agent-identity.md](../protocol/agent-identity.md).
 | Method | Purpose |
 |--------|---------|
 | `exportJwks()` | Public keys for `/.well-known/jwks.json` |
-| `rotateKeys()` | Rotate signing key; retain previous `kid` in JWKS until verification window ends |
+| `rotateKeys(nextSigningKey)` | Rotate signing key; retain previous `kid` in JWKS until `keyRotation.retentionSeconds` elapses |
 
 Merchants pin `jwksUri` in `dpp-merchant-sdk` trust config.
 
