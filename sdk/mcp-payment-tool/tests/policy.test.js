@@ -1,11 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { randomBytes } from 'node:crypto';
+import { DELEGATION_STATUS } from 'dpp-agent-vault';
 import { PAYMENT_RAIL, RAIL_CLASS } from 'dpp-wallet-sdk';
 import {
   evaluateConfirmPaymentPolicy,
   evaluatePreviewPaymentPolicy,
 } from '../dist/policy/engine.js';
+import {
+  MCP_TOOL_CODE,
+  POLICY_DEFAULT_CURRENCY,
+  POLICY_VIOLATION,
+} from '../dist/policy/constants.js';
 import { buildPolicyFromEnv } from '../dist/policy/defaults.js';
 import { handlePreviewPayment } from '../dist/tools/preview-payment.js';
 import { McpPaymentSession } from '../dist/session.js';
@@ -39,11 +45,17 @@ const activeDelegation = {
   delegationId: 'dlg_policy_test',
   userId: 'usr_test',
   agentSub: config.oauth.agentSub,
-  status: 'active',
+  status: DELEGATION_STATUS.ACTIVE,
   hasCapability: false,
   linkedAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
+
+test('buildPolicyFromEnv defaults currency to INR', () => {
+  const defaults = buildPolicyFromEnv({ defaultMerchantId: 'merchant:example_com' });
+  assert.equal(defaults.maxAmount.currency, POLICY_DEFAULT_CURRENCY);
+  assert.equal(defaults.maxAmount.currency, 'INR');
+});
 
 test('preview policy denies amount above max', () => {
   const decision = evaluatePreviewPaymentPolicy({
@@ -56,7 +68,7 @@ test('preview policy denies amount above max', () => {
     },
   });
   assert.equal(decision.allowed, false);
-  assert.ok(decision.violations.includes('amount_exceeds_max'));
+  assert.ok(decision.violations.includes(POLICY_VIOLATION.AMOUNT_EXCEEDS_MAX));
 });
 
 test('preview policy denies merchant outside allowlist', () => {
@@ -70,7 +82,7 @@ test('preview policy denies merchant outside allowlist', () => {
     },
   });
   assert.equal(decision.allowed, false);
-  assert.ok(decision.violations.includes('merchant_not_allowlisted'));
+  assert.ok(decision.violations.includes(POLICY_VIOLATION.MERCHANT_NOT_ALLOWLISTED));
 });
 
 test('preview policy denies disallowed rail', () => {
@@ -84,7 +96,7 @@ test('preview policy denies disallowed rail', () => {
     },
   });
   assert.equal(decision.allowed, false);
-  assert.ok(decision.violations.includes('rail_not_allowed'));
+  assert.ok(decision.violations.includes(POLICY_VIOLATION.RAIL_NOT_ALLOWED));
 });
 
 test('confirm policy denies expired preview', () => {
@@ -99,7 +111,7 @@ test('confirm policy denies expired preview', () => {
     previewCreatedAt: new Date(Date.now() - 120_000).toISOString(),
   });
   assert.equal(decision.allowed, false);
-  assert.ok(decision.violations.includes('preview_expired'));
+  assert.ok(decision.violations.includes(POLICY_VIOLATION.PREVIEW_EXPIRED));
 });
 
 test('preview_payment tool returns policy_denied before creating preview', async () => {
@@ -120,8 +132,8 @@ test('preview_payment tool returns policy_denied before creating preview', async
   });
 
   assert.equal(preview.status, 'error');
-  assert.equal(preview.code, 'policy_denied');
-  assert.ok(preview.policyViolations.includes('amount_exceeds_max'));
+  assert.equal(preview.code, MCP_TOOL_CODE.POLICY_DENIED);
+  assert.ok(preview.policyViolations.includes(POLICY_VIOLATION.AMOUNT_EXCEEDS_MAX));
   assert.equal(session.getPreview(preview.previewId), undefined);
 });
 

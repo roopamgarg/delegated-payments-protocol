@@ -1,4 +1,5 @@
 import type { PaymentIntentInput } from 'dpp-wallet-sdk';
+import type { PolicyViolationCode } from './constants.js';
 
 /** Server-side delegation limits enforced before MCP tools mutate wallet/merchant state. */
 export type DelegationPolicy = {
@@ -8,16 +9,7 @@ export type DelegationPolicy = {
   readonly previewMaxAgeSeconds: number;
 };
 
-export type PolicyViolation =
-  | 'delegation_revoked'
-  | 'amount_invalid'
-  | 'amount_exceeds_max'
-  | 'currency_mismatch'
-  | 'merchant_not_allowlisted'
-  | 'rail_not_allowed'
-  | 'preview_required'
-  | 'preview_expired'
-  | 'preview_delegation_mismatch';
+export type PolicyViolation = PolicyViolationCode;
 
 export type PolicyDecision =
   | { readonly allowed: true }

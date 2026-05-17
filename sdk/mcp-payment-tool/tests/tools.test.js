@@ -26,7 +26,10 @@ const config = {
   defaultMerchantId: 'merchant:example_com',
   oauthCallbackHost: '127.0.0.1',
   oauthCallbackPort: 8765,
-  policy: buildPolicyFromEnv({ defaultMerchantId: 'merchant:example_com' }),
+  policy: buildPolicyFromEnv({
+    defaultMerchantId: 'merchant:example_com',
+    maxAmountCurrency: 'USD',
+  }),
 };
 
 test('PKCE challenge matches verifier', () => {

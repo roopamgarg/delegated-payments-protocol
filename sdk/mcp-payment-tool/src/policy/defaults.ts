@@ -1,7 +1,11 @@
+import { PAYMENT_RAIL } from 'dpp-wallet-sdk';
 import type { McpPaymentConfig } from '../types.js';
+import {
+  POLICY_DEFAULT_CURRENCY,
+  POLICY_DEFAULT_MAX_AMOUNT_VALUE,
+  POLICY_DEFAULT_PREVIEW_MAX_AGE_SECONDS,
+} from './constants.js';
 import type { DelegationPolicy } from './types.js';
-
-const DEFAULT_PREVIEW_MAX_AGE_SECONDS = 300;
 
 export function defaultDelegationPolicy(config: McpPaymentConfig): DelegationPolicy {
   return loadDelegationPolicyFromConfig(config);
@@ -30,23 +34,25 @@ export function buildPolicyFromEnv(input: {
     .map((m) => m.trim())
     .filter(Boolean);
 
-  const paymentMethods = (input.paymentMethods ?? 'card')
+  const paymentMethods = (input.paymentMethods ?? PAYMENT_RAIL.CARD)
     .split(',')
     .map((m) => m.trim())
     .filter(Boolean);
 
-  const previewMaxAgeSeconds = Number(input.previewMaxAgeSeconds ?? DEFAULT_PREVIEW_MAX_AGE_SECONDS);
+  const previewMaxAgeSeconds = Number(
+    input.previewMaxAgeSeconds ?? POLICY_DEFAULT_PREVIEW_MAX_AGE_SECONDS,
+  );
 
   return {
     maxAmount: {
-      value: input.maxAmountValue ?? '25.00',
-      currency: input.maxAmountCurrency ?? 'USD',
+      value: input.maxAmountValue ?? POLICY_DEFAULT_MAX_AMOUNT_VALUE,
+      currency: input.maxAmountCurrency ?? POLICY_DEFAULT_CURRENCY,
     },
     merchantAllowlist: merchants.length > 0 ? merchants : [input.defaultMerchantId],
     paymentMethods,
     previewMaxAgeSeconds:
       Number.isFinite(previewMaxAgeSeconds) && previewMaxAgeSeconds > 0
         ? previewMaxAgeSeconds
-        : DEFAULT_PREVIEW_MAX_AGE_SECONDS,
+        : POLICY_DEFAULT_PREVIEW_MAX_AGE_SECONDS,
   };
 }

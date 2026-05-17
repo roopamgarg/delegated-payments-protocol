@@ -9,6 +9,13 @@ import {
   computeIntentDigest,
   type PaymentIntentInput,
 } from 'dpp-wallet-sdk';
+import {
+  MCP_TOOL_CODE,
+  POLICY_DEFAULT_CURRENCY,
+  POLICY_DEFAULT_MAX_AMOUNT_VALUE,
+  POLICY_DEFAULT_PAYMENT_METHODS,
+  POLICY_DEFAULT_PREVIEW_MAX_AGE_SECONDS,
+} from '../policy/constants.js';
 import type { DelegationPolicy } from '../policy/types.js';
 import type { McpPaymentConfig } from '../types.js';
 
@@ -118,10 +125,13 @@ export async function issueCapability(
       constraints:
         input.constraints ??
         delegationConstraintsFromPolicy({
-          maxAmount: { value: '25.00', currency: 'USD' },
+          maxAmount: {
+            value: POLICY_DEFAULT_MAX_AMOUNT_VALUE,
+            currency: POLICY_DEFAULT_CURRENCY,
+          },
           merchantAllowlist: [config.defaultMerchantId],
-          paymentMethods: ['card'],
-          previewMaxAgeSeconds: 300,
+          paymentMethods: [...POLICY_DEFAULT_PAYMENT_METHODS],
+          previewMaxAgeSeconds: POLICY_DEFAULT_PREVIEW_MAX_AGE_SECONDS,
         }),
     }),
   });
@@ -168,6 +178,6 @@ export function mapWalletErrorToToolCode(err: unknown): string {
   }
   if (err.status === 401) return 'link_expired';
   if (err.status === 403 && err.code === 'agent_disabled') return 'agent_revoked';
-  if (err.status === 403) return 'policy_denied';
+  if (err.status === 403) return MCP_TOOL_CODE.POLICY_DENIED;
   return 'wallet_error';
 }
