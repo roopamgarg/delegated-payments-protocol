@@ -8,6 +8,7 @@ import {
   buildPaymentIntentRecord,
   generatePkcePair,
 } from '../dist/clients/wallet-client.js';
+import { buildPolicyFromEnv } from '../dist/policy/defaults.js';
 import { handlePreviewPayment } from '../dist/tools/preview-payment.js';
 import { McpPaymentSession } from '../dist/session.js';
 
@@ -22,9 +23,14 @@ const config = {
     scopes: ['dpp:delegation:read', 'dpp:delegation:issue'],
   },
   vaultMasterKey: randomBytes(32).toString('base64'),
+  sessionUserId: 'usr_test',
   defaultMerchantId: 'merchant:example_com',
   oauthCallbackHost: '127.0.0.1',
   oauthCallbackPort: 8765,
+  policy: buildPolicyFromEnv({
+    defaultMerchantId: 'merchant:example_com',
+    maxAmountCurrency: 'USD',
+  }),
 };
 
 test('PKCE challenge matches verifier', () => {
@@ -63,6 +69,7 @@ test('preview_payment returns LLM-safe payload when delegation exists', async ()
     accessToken: 'at_demo_not_real',
     expiresIn: 3600,
   });
+  session.bindDelegationPolicy(stored.delegationId);
 
   const preview = await handlePreviewPayment(session, {
     delegationId: stored.delegationId,

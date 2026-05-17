@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "decimal.js": "^10.5.0",
     "dpp-agent-vault": "file:../agent-vault",
     "dpp-wallet-sdk": "file:../wallet-sdk",
     "zod": "^3.24.2"

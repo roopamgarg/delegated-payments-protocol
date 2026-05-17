@@ -17,6 +17,7 @@ import { DEFAULT_ISSUER, DEMO_AGENT, DEMO_USER } from './fixtures.mjs';
 const PORT = Number(process.env.PORT ?? 3350);
 const ISSUER = process.env.WALLET_ISSUER ?? DEFAULT_ISSUER;
 const OPERATOR_TOKEN = process.env.DPP_OPERATOR_TOKEN ?? 'dev-operator-token';
+const AGENT_REGISTRATION_ENABLED = process.env.DPP_AGENT_REGISTRATION !== '0';
 const SESSION_COOKIE = 'dpp_wallet_session';
 
 /** @type {import('dpp-wallet-sdk').DPPWalletIssuer | undefined} */
@@ -263,6 +264,10 @@ app.get('/v1/users/me/rails', (req, res) => {
 });
 
 app.post('/v1/agents', (req, res) => {
+  if (!AGENT_REGISTRATION_ENABLED) {
+    res.status(404).json({ error: 'not_found', message: 'Agent registration is disabled' });
+    return;
+  }
   if (!requireOperator(req, res)) return;
   wallet
     .registerAgent(req.body)

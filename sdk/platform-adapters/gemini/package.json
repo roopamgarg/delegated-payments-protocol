@@ -1,0 +1,36 @@
+{
+  "name": "dpp-gemini-payment-adapter",
+  "version": "0.1.0-alpha.0",
+  "description": "Gemini function-calling declarations and executor for DPP delegated payments (plan §8.14).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "sample": "npm run build && node dist/sample/chat.js",
+    "test": "npm run build && node --test tests/*.test.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "dpp-mcp-payment-tool": "file:../../mcp-payment-tool"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.4.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roopamgarg/delegated-payments-protocol.git",
+    "directory": "sdk/platform-adapters/gemini"
+  }
+}

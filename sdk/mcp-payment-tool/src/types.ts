@@ -1,5 +1,6 @@
 import type { PaymentIntentInput } from 'dpp-wallet-sdk';
 import type { SafeDelegationHandle } from 'dpp-agent-vault';
+import type { DelegationPolicy } from './policy/types.js';
 
 export type McpPaymentConfig = {
   readonly walletBaseUrl: string;
@@ -12,9 +13,12 @@ export type McpPaymentConfig = {
     readonly scopes: readonly string[];
   };
   readonly vaultMasterKey: string;
+  readonly sessionUserId: string;
   readonly defaultMerchantId: string;
   readonly oauthCallbackHost: string;
   readonly oauthCallbackPort: number;
+  /** Platform policy applied before every payment tool call. */
+  readonly policy: DelegationPolicy;
 };
 
 export type PaymentPreviewRecord = {
