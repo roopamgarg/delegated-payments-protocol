@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { assertSafeForLlmContext, sanitizeForLlm } from 'dpp-agent-vault';
 import { PAYMENT_RAIL, RAIL_CLASS, computeIntentDigest } from 'dpp-wallet-sdk';
 import { buildPaymentIntentRecord } from '../clients/wallet-client.js';
+import { denyIfVaultUserMismatch } from '../session-principal.js';
 import type { McpPaymentSession } from '../session.js';
 
 export async function handlePreviewPayment(
@@ -25,6 +26,9 @@ export async function handlePreviewPayment(
       message: 'Link wallet first (link_wallet).',
     };
   }
+
+  const vaultDenied = denyIfVaultUserMismatch(session, meta.userId);
+  if (vaultDenied) return vaultDenied;
 
   const merchantId = input.merchantId ?? session.config.defaultMerchantId;
   const intentInput = {

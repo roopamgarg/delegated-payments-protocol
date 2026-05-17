@@ -12,6 +12,7 @@ import {
   ensureOAuthCallbackServer,
   registerPendingOAuth,
 } from '../oauth-callback.js';
+import { denyIfUserIdMismatch } from '../session-principal.js';
 import type { McpPaymentSession } from '../session.js';
 import type { LinkWalletResult } from '../types.js';
 
@@ -58,6 +59,9 @@ export async function handleLinkWallet(
     waitForCallbackSeconds?: number;
   },
 ): Promise<LinkWalletResult> {
+  const principalDenied = denyIfUserIdMismatch(session, input.userId);
+  if (principalDenied) return principalDenied;
+
   const { config } = session;
 
   if (input.authorizationCode && input.state) {

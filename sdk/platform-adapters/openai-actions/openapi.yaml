@@ -1,0 +1,202 @@
+openapi: 3.0.3
+info:
+  title: DPP ChatGPT Actions (reference)
+  description: |
+    REST surface matching the MCP payment tools. Authenticate each request with
+    Bearer token or X-Api-Key (see `DPP_ACTIONS_API_KEY`). User partition id is sent
+    as `X-DPP-User-Id` so vault state is scoped per end user.
+  version: 0.1.0-alpha.0
+
+servers:
+  - url: http://127.0.0.1:8780
+    description: Local default (`DPP_ACTIONS_PUBLIC_URL`)
+
+components:
+  securitySchemes:
+    ActionsApiKey:
+      type: http
+      scheme: bearer
+      bearerFormat: DPP Actions API key
+    HeaderApiKey:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+
+paths:
+  /health:
+    get:
+      summary: Liveness probe
+      operationId: health
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  adapter:
+                    type: string
+
+  /openapi.yaml:
+    get:
+      summary: Hosted OpenAPI spec (import into GPT builder)
+      operationId: getOpenApi
+      responses:
+        '200':
+          description: YAML body
+          content:
+            application/yaml:
+              schema:
+                type: string
+
+  /v1/link-wallet/start:
+    post:
+      summary: Begin wallet OAuth PKCE (first step)
+      operationId: linkWalletStart
+      security:
+        - ActionsApiKey: []
+        - HeaderApiKey: []
+      parameters:
+        - in: header
+          name: X-DPP-User-Id
+          required: false
+          schema:
+            type: string
+          description: End-user stable id (preferred). Body `userId` allowed for demos.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                waitForCallbackSeconds:
+                  type: integer
+                  minimum: 0
+                  maximum: 120
+      responses:
+        '200':
+          description: Authorization URL or linked delegation
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /v1/link-wallet/complete:
+    post:
+      summary: Complete OAuth with code + state
+      operationId: linkWalletComplete
+      security:
+        - ActionsApiKey: []
+        - HeaderApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [authorizationCode, state]
+              properties:
+                authorizationCode:
+                  type: string
+                state:
+                  type: string
+      responses:
+        '200':
+          description: Linked or error object
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Missing fields
+
+  /v1/payments/preview:
+    post:
+      summary: Preview payment intent (no charge)
+      operationId: previewPayment
+      security:
+        - ActionsApiKey: []
+        - HeaderApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [delegationId, amountValue, currency]
+              properties:
+                delegationId:
+                  type: string
+                amountValue:
+                  type: string
+                currency:
+                  type: string
+                merchantId:
+                  type: string
+                rail:
+                  type: string
+                idempotencyKey:
+                  type: string
+      responses:
+        '200':
+          description: Preview payload or error
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Invalid request
+
+  /v1/payments/confirm:
+    post:
+      summary: Confirm preview and delegate charge
+      operationId: confirmPayment
+      security:
+        - ActionsApiKey: []
+        - HeaderApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [previewId]
+              properties:
+                previewId:
+                  type: string
+      responses:
+        '200':
+          description: Result or error
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Invalid request
+
+  /v1/payments/status:
+    get:
+      summary: Poll payment status
+      operationId: getPaymentStatus
+      security:
+        - ActionsApiKey: []
+        - HeaderApiKey: []
+      parameters:
+        - in: query
+          name: pspPaymentId
+          schema:
+            type: string
+        - in: query
+          name: previewId
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Status object
+          content:
+            application/json:
+              schema:
+                type: object

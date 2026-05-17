@@ -22,6 +22,7 @@ const config = {
     scopes: ['dpp:delegation:read', 'dpp:delegation:issue'],
   },
   vaultMasterKey: randomBytes(32).toString('base64'),
+  sessionUserId: 'usr_test',
   defaultMerchantId: 'merchant:example_com',
   oauthCallbackHost: '127.0.0.1',
   oauthCallbackPort: 8765,

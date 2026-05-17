@@ -12,6 +12,7 @@ export type McpPaymentConfig = {
     readonly scopes: readonly string[];
   };
   readonly vaultMasterKey: string;
+  readonly sessionUserId: string;
   readonly defaultMerchantId: string;
   readonly oauthCallbackHost: string;
   readonly oauthCallbackPort: number;
