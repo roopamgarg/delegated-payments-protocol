@@ -7,6 +7,15 @@ const base = window.location.origin;
 const SAMPLE_DIGEST =
   'fa1183e76b890f5cea60ea03d76bd8f2e6f32fee72f47e25669d68ae84b360db';
 
+const STACK_KEYS = new Set([
+  'stack',
+  'stackTrace',
+  'trace',
+  'cause',
+  'originalError',
+  'inner',
+]);
+
 /** @type {{ capabilityToken?: string, paymentIntent?: object }} */
 const state = {};
 
@@ -24,6 +33,74 @@ function pretty(obj) {
 function setBadge(node, text, kind) {
   node.textContent = text;
   node.className = `badge badge-${kind}`;
+}
+
+function sanitizePayload(value) {
+  if (value == null) return value;
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizePayload(item));
+  }
+  if (typeof value !== 'object') return value;
+  const out = {};
+  for (const [key, val] of Object.entries(value)) {
+    if (STACK_KEYS.has(key)) continue;
+    out[key] = sanitizePayload(val);
+  }
+  return out;
+}
+
+/** Map fetch/API failures to a stable DPP-shaped object (no stack traces). */
+function normalizeApiError(err, fallbackContext) {
+  const body = err.details && typeof err.details === 'object' ? err.details : {};
+  const code = body.code ?? err.code ?? body.error ?? 'request_failed';
+  const message = body.message ?? err.message ?? 'Request failed';
+  const details =
+    body.details && typeof body.details === 'object'
+      ? sanitizePayload(body.details)
+      : sanitizePayload(
+          Object.fromEntries(
+            Object.entries(body).filter(([k]) => !['code', 'message', 'error'].includes(k)),
+          ),
+        );
+  const hasDetails = details && typeof details === 'object' && Object.keys(details).length > 0;
+  return {
+    context: fallbackContext,
+    code: String(code),
+    message: String(message),
+    details: hasDetails ? details : undefined,
+    httpStatus: err.status,
+  };
+}
+
+function clearErrorPanel() {
+  el('error-panel').hidden = true;
+}
+
+function showErrorPanel(normalized) {
+  const panel = el('error-panel');
+  el('error-context').textContent = normalized.context ?? '';
+  el('error-code').textContent = normalized.code;
+  el('error-message').textContent = normalized.message;
+
+  const wrap = el('error-details-wrap');
+  if (normalized.details) {
+    wrap.hidden = false;
+    el('error-details').textContent = pretty(normalized.details);
+  } else {
+    wrap.hidden = true;
+    el('error-details').textContent = '—';
+  }
+
+  panel.hidden = false;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function capabilityForRequest() {
+  const token = state.capabilityToken;
+  if (!token) return token;
+  if (!el('bad-token-toggle').checked) return token;
+  if (token.length < 8) return `${token}x`;
+  return `${token.slice(0, -4)}xxxx`;
 }
 
 async function api(path, options = {}) {
@@ -53,8 +130,9 @@ function applyBanner(pspMode) {
     text.textContent = 'SANDBOX ONLY — Stripe Test Mode';
     sub.textContent = 'Real test PaymentIntents; no live money. Complete 3DS outside this UI.';
   } else {
-    text.textContent = 'SANDBOX ONLY — mock PSP';
-    sub.textContent = 'Offline fallback — not real Stripe sandbox behavior. Set sk_test_ for board demos.';
+    text.textContent = 'SANDBOX ONLY — mock PSP (degraded)';
+    sub.textContent =
+      'STRIPE_SECRET_KEY unset — in-memory mock only, not real Stripe sandbox. Set sk_test_ in .env.local for board demos.';
   }
 }
 
@@ -99,6 +177,9 @@ function setMinted(mint) {
   setBadge(el('verdict-badge'), '—', 'idle');
   el('escalation-panel').hidden = true;
   el('delegate-response').textContent = '—';
+  el('verify-response').textContent = '—';
+  el('verify-note').hidden = true;
+  clearErrorPanel();
 }
 
 function buildIntentFromForm() {
@@ -126,6 +207,8 @@ async function loadHealth() {
   applyBanner(mode);
 }
 
+el('btn-dismiss-error').addEventListener('click', clearErrorPanel);
+
 el('btn-mint').addEventListener('click', async () => {
   el('btn-mint').disabled = true;
   try {
@@ -134,7 +217,8 @@ el('btn-mint').addEventListener('click', async () => {
     mint.paymentIntent = { ...mint.paymentIntent, ...intent };
     setMinted(mint);
   } catch (err) {
-    el('capability-preview').textContent = err.message;
+    showErrorPanel(normalizeApiError(err, 'Mint capability'));
+    el('capability-preview').textContent = 'Mint failed — see error panel';
   } finally {
     el('btn-mint').disabled = false;
   }
@@ -143,15 +227,17 @@ el('btn-mint').addEventListener('click', async () => {
 el('btn-delegate').addEventListener('click', async () => {
   if (!state.capabilityToken) return;
   el('btn-delegate').disabled = true;
+  clearErrorPanel();
   try {
     const data = await api('/payments/delegate', {
       method: 'POST',
       body: JSON.stringify({
-        capabilityToken: state.capabilityToken,
+        capabilityToken: capabilityForRequest(),
         paymentIntent: state.paymentIntent,
       }),
     });
-    el('delegate-response').textContent = pretty(data);
+    const safe = sanitizePayload(data);
+    el('delegate-response').textContent = pretty(safe);
     setBadge(el('payment-badge'), data.status, paymentBadgeKind(data.status));
     setBadge(
       el('verdict-badge'),
@@ -167,8 +253,14 @@ el('btn-delegate').addEventListener('click', async () => {
       el('client-secret-hint').hidden = false;
     }
   } catch (err) {
-    setBadge(el('payment-badge'), err.code ?? 'error', 'err');
-    el('delegate-response').textContent = pretty(err.details ?? { message: err.message });
+    const normalized = normalizeApiError(err, 'Submit payment');
+    showErrorPanel(normalized);
+    setBadge(el('payment-badge'), normalized.code, 'err');
+    el('delegate-response').textContent = pretty({
+      code: normalized.code,
+      message: normalized.message,
+      details: normalized.details,
+    });
     el('escalation-panel').hidden = true;
   } finally {
     el('btn-delegate').disabled = false;
@@ -178,22 +270,31 @@ el('btn-delegate').addEventListener('click', async () => {
 el('btn-verify').addEventListener('click', async () => {
   if (!state.capabilityToken) return;
   el('btn-verify').disabled = true;
+  clearErrorPanel();
   try {
     const data = await api('/delegation/verify', {
       method: 'POST',
       body: JSON.stringify({
-        capabilityToken: state.capabilityToken,
+        capabilityToken: capabilityForRequest(),
         paymentIntent: state.paymentIntent,
       }),
     });
-    el('verify-response').textContent = pretty(data);
+    el('verify-response').textContent = pretty(sanitizePayload(data));
     setBadge(
       el('verdict-badge'),
       data.verdict ?? '—',
       data.verdict === 'delegation_valid' ? 'ok' : 'warn',
     );
+    el('verify-note').hidden = false;
   } catch (err) {
-    el('verify-response').textContent = pretty(err.details ?? { message: err.message });
+    const normalized = normalizeApiError(err, 'Verify only (no charge)');
+    showErrorPanel(normalized);
+    el('verify-response').textContent = pretty({
+      code: normalized.code,
+      message: normalized.message,
+      details: normalized.details,
+    });
+    el('verify-note').hidden = true;
   } finally {
     el('btn-verify').disabled = false;
   }
@@ -205,12 +306,15 @@ el('btn-poll').addEventListener('click', async () => {
   el('btn-poll').disabled = true;
   try {
     const data = await api(`/payments/${encodeURIComponent(id)}/status`);
-    el('poll-response').textContent = pretty(data);
+    el('poll-response').textContent = pretty(sanitizePayload(data));
     if (data.status) {
       setBadge(el('payment-badge'), data.status, paymentBadgeKind(data.status));
     }
   } catch (err) {
-    el('poll-response').textContent = pretty(err.details ?? { message: err.message });
+    showErrorPanel(normalizeApiError(err, 'Poll PSP status'));
+    el('poll-response').textContent = pretty(
+      sanitizePayload(normalizeApiError(err, 'Poll PSP status')),
+    );
   } finally {
     el('btn-poll').disabled = false;
   }
@@ -218,4 +322,5 @@ el('btn-poll').addEventListener('click', async () => {
 
 loadHealth().catch((err) => {
   el('psp-mode').textContent = `Error: ${err.message}`;
+  showErrorPanel(normalizeApiError(err, 'Load /health'));
 });

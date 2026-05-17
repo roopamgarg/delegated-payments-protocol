@@ -80,6 +80,28 @@ PSP mode: Stripe Test Mode (stripe_test)
 
 For offline mock PSP (no Stripe account), use `npm start` without `STRIPE_SECRET_KEY` — not `npm run sandbox`.
 
+## Sandbox console (`/sandbox`)
+
+Browser UI for manual verification (board demos). Served at `http://127.0.0.1:3340/sandbox` when the harness runs with `NODE_ENV` not `production` and `DPP_SANDBOX_UI` unset.
+
+![Sandbox console — three columns, PSP banner, error panel](docs/sandbox-console.png)
+
+| Column | Purpose |
+|--------|---------|
+| Wallet / setup | Mint capability + intent; toggle **invalid token** for error demos |
+| Agent | Submit payment (`POST /payments/delegate`) |
+| Merchant / audit | **Verify only** (no charge), poll PSP status |
+
+### Manual scenarios (UI-04–UI-06)
+
+| ID | Steps | Expected |
+|----|-------|----------|
+| **UI-04** | Mint → **Verify only (no charge)** | `delegation_valid` in verify JSON; green verify note; payment badge stays idle. Re-mint before Submit (SDK consumes nonce on verify). |
+| **UI-05** | Mint → enable **Simulate invalid capability token** → Verify or Submit | Error panel shows `code` + `message` only; no stack trace in panel or JSON |
+| **UI-06** | `npm start` without `STRIPE_SECRET_KEY` → open `/sandbox` | Banner: **mock PSP (degraded)**; `/health` reports `stripe_mock` |
+
+For Stripe Test Mode (UI-01–03), use `npm run sandbox` with `sk_test_…` in `.env.local`.
+
 ### Guardrail check
 
 ```bash

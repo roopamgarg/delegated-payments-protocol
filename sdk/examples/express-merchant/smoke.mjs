@@ -41,15 +41,48 @@ try {
   if (!sandboxPage.ok) throw new Error('sandbox UI not served');
   const html = await sandboxPage.text();
   if (!html.includes('DPP Sandbox Console')) throw new Error('sandbox HTML missing title');
+  if (!html.includes('error-panel')) throw new Error('sandbox HTML missing error panel');
+  if (!html.includes('bad-token-toggle')) throw new Error('sandbox HTML missing bad-token toggle');
 
-  const mint = await fetch(`${base}/demo/capability`, { method: 'POST' }).then((r) => r.json());
+  const mintPay = await fetch(`${base}/demo/capability`, { method: 'POST' }).then((r) => r.json());
+
+  const mintVerify = await fetch(`${base}/demo/capability`, { method: 'POST' }).then((r) => r.json());
+  const verifyOnly = await fetch(`${base}/delegation/verify`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      capabilityToken: mintVerify.capabilityToken,
+      paymentIntent: mintVerify.paymentIntent,
+    }),
+  }).then((r) => r.json());
+  if (verifyOnly.verdict !== 'delegation_valid') {
+    throw new Error(`verify-only expected delegation_valid, got ${JSON.stringify(verifyOnly)}`);
+  }
+
+  const corrupt =
+    mintVerify.capabilityToken.length > 4
+      ? `${mintVerify.capabilityToken.slice(0, -4)}xxxx`
+      : `${mintVerify.capabilityToken}x`;
+  const badRes = await fetch(`${base}/delegation/verify`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      capabilityToken: corrupt,
+      paymentIntent: mintVerify.paymentIntent,
+    }),
+  });
+  const badBody = await badRes.json();
+  const badJson = JSON.stringify(badBody);
+  if (badRes.ok) throw new Error('bad token should fail');
+  if (!badBody.code || !badBody.message) throw new Error('bad token missing DPPError shape');
+  if (/stack/i.test(badJson)) throw new Error('bad token response must not include stack');
 
   const pay = await fetch(`${base}/payments/delegate`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
-      capabilityToken: mint.capabilityToken,
-      paymentIntent: mint.paymentIntent,
+      capabilityToken: mintPay.capabilityToken,
+      paymentIntent: mintPay.paymentIntent,
     }),
   }).then((r) => r.json());
 
